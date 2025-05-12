@@ -72,9 +72,41 @@ bool QuoridorCore_canPlayWall(QuoridorCore *self, WallType type, int i, int j)
     if (i < 0 || i >= self->gridSize - 1) return false;
     if (j < 0 || j >= self->gridSize - 1) return false;
 
-    // TODO
+    bool isFeasible;
 
-    return false;
+    switch (type)
+    {
+    case WALL_TYPE_HORIZONTAL:
+        if (self->hWalls[i][j] != WALL_STATE_NONE) return false;
+        if (self->hWalls[i][j + 1] != WALL_STATE_NONE) return false;
+        if (self->vWalls[i][j] == WALL_STATE_START) return false;
+
+        self->hWalls[i][j] = WALL_STATE_START;
+        self->hWalls[i][j + 1] = WALL_STATE_END;
+
+        isFeasible = QuoridorCore_isFeasible(self);
+
+        self->hWalls[i][j] = WALL_STATE_NONE;
+        self->hWalls[i][j + 1] = WALL_STATE_NONE;
+
+        return isFeasible;
+        break;
+    default:
+        if (self->vWalls[i][j] != WALL_STATE_NONE) return false;
+        if (self->vWalls[i + 1][j] != WALL_STATE_NONE) return false;
+        if (self->hWalls[i][j] == WALL_STATE_START) return false;
+
+        self->vWalls[i][j] = WALL_STATE_START;
+        self->vWalls[i + 1][j] = WALL_STATE_END;
+
+        isFeasible = QuoridorCore_isFeasible(self);
+
+        self->vWalls[i][j] = WALL_STATE_NONE;
+        self->vWalls[i+1][j] = WALL_STATE_NONE;
+
+        return isFeasible;
+        break;
+    }
 }
 
 void QuoridorCore_updateValidMoves(QuoridorCore *self)
@@ -88,6 +120,71 @@ void QuoridorCore_updateValidMoves(QuoridorCore *self)
     // TODO
 
     // Par exemple :
+    memset(self->isValid, 0, sizeof(self->isValid));
+
+    if (!QuoridorCore_hasWallAbove(self, currI, currJ))
+        self->isValid[currI - 1][currJ] = true;
+    if (!QuoridorCore_hasWallBelow(self, currI, currJ))
+        self->isValid[currI + 1][currJ] = true;
+    if (!QuoridorCore_hasWallLeft(self, currI, currJ))
+        self->isValid[currI][currJ - 1] = true;
+    if (!QuoridorCore_hasWallRight(self, currI, currJ))
+        self->isValid[currI][currJ + 1] = true;
+
+    // Cas de contact other au dessus
+    if (currI - 1 == otherI && currJ == otherJ && !QuoridorCore_hasWallAbove(self, currI, currJ))
+    {
+        if (QuoridorCore_hasWallAbove(self, otherI, otherJ))
+        {
+            if (!QuoridorCore_hasWallLeft(self, otherI, otherJ))
+                self->isValid[otherI][otherJ - 1] = true;
+            if (!QuoridorCore_hasWallRight(self, otherI, otherJ))
+                self->isValid[otherI][otherJ + 1] = true;
+        }
+        else
+            QuoridorCore_setValidPosition(self, otherI - 1,otherJ, true);
+    }
+    // Cas de contact other en dessous
+    if (currI + 1 == otherI && currJ == otherJ && !QuoridorCore_hasWallBelow(self, currI, currJ))
+    {
+        if (QuoridorCore_hasWallBelow(self, otherI, otherJ))
+        {
+            if (!QuoridorCore_hasWallLeft(self, otherI, otherJ))
+                self->isValid[otherI][otherJ - 1] = true;
+            if (!QuoridorCore_hasWallRight(self, otherI, otherJ))
+                self->isValid[otherI][otherJ + 1] = true;
+        }
+        else
+            QuoridorCore_setValidPosition(self, otherI + 1, otherJ, true);
+    }
+    // Cas de contact other à gauche
+    if (currI == otherI && currJ - 1 == otherJ && !QuoridorCore_hasWallLeft(self, currI, currJ))
+    {
+        if (QuoridorCore_hasWallLeft(self, otherI, otherJ))
+        {
+            if (!QuoridorCore_hasWallAbove(self, otherI, otherJ))
+                self->isValid[otherI - 1][otherJ] = true;
+            if (!QuoridorCore_hasWallBelow(self, otherI, otherJ))
+                self->isValid[otherI + 1][otherJ] = true;
+        }
+        else
+            QuoridorCore_setValidPosition(self, otherI, otherJ - 1, true);
+    }
+    // Cas de contact other à droite
+    if (currI == otherI && currJ + 1 == otherJ && !QuoridorCore_hasWallRight(self, currI, currJ))
+    {
+        if (QuoridorCore_hasWallRight(self, otherI, otherJ))
+        {
+            if (!QuoridorCore_hasWallAbove(self, otherI, otherJ))
+                self->isValid[otherI - 1][otherJ] = true;
+            if (!QuoridorCore_hasWallBelow(self, otherI, otherJ))
+                self->isValid[otherI + 1][otherJ] = true;
+        }
+        else
+            QuoridorCore_setValidPosition(self, otherI, otherJ + 1, true);
+    }
+
+    self->isValid[currI][currJ] = false;
     self->isValid[otherI][otherJ] = false;
 }
 
@@ -100,6 +197,12 @@ static bool QuoridorCore_isFeasibleRec0(QuoridorCore *self, bool explored[MAX_GR
     // Fonction récursive vérifiant qu'il existe un chemin permettant au joueur 0 de terminer la partie.
     // Cette fonction réalise un parcours en profondeur.
     // Ordonnez les cases voisines à explorer pour améliorer les performances.
+    explored[i][j] = true;
+
+    if (!explored[i][j + 1] && !QuoridorCore_hasWallRight(self, i, j) && QuoridorCore_isFeasibleRec0(self, explored, i, j + 1)) return true;
+    if (!explored[i - 1][j] && !QuoridorCore_hasWallAbove(self, i, j) && QuoridorCore_isFeasibleRec0(self, explored, i - 1, j)) return true;
+    if (!explored[i + 1][j] && !QuoridorCore_hasWallBelow(self, i, j) && QuoridorCore_isFeasibleRec0(self, explored, i + 1, j)) return true;
+    if (!explored[i][j - 1] && !QuoridorCore_hasWallLeft(self, i, j) && QuoridorCore_isFeasibleRec0(self, explored, i, j - 1)) return true;
 
     return false;
 }
@@ -113,6 +216,12 @@ static bool QuoridorCore_isFeasibleRec1(QuoridorCore *self, bool explored[MAX_GR
     // Fonction récursive vérifiant qu'il existe un chemin permettant au joueur 1 de terminer la partie.
     // Cette fonction réalise un parcours en profondeur.
     // Ordonnez les cases voisines à explorer pour améliorer les performances.
+    explored[i][j] = true;
+
+    if (!explored[i][j - 1] && !QuoridorCore_hasWallLeft(self, i, j) && QuoridorCore_isFeasibleRec1(self, explored, i, j - 1)) return true;
+    if (!explored[i - 1][j] && !QuoridorCore_hasWallAbove(self, i, j) && QuoridorCore_isFeasibleRec1(self, explored, i - 1, j)) return true;
+    if (!explored[i + 1][j] && !QuoridorCore_hasWallBelow(self, i, j) && QuoridorCore_isFeasibleRec1(self, explored, i + 1, j)) return true;
+    if (!explored[i][j + 1] && !QuoridorCore_hasWallRight(self, i, j) && QuoridorCore_isFeasibleRec1(self, explored, i, j + 1)) return true;
 
     return false;
 }
@@ -122,10 +231,11 @@ bool QuoridorCore_isFeasible(QuoridorCore *self)
     bool explored[MAX_GRID_SIZE][MAX_GRID_SIZE] = { 0 };
 
     // TODO
-    // Utilisez QuoridorCore_isFeasibleRec0().
-    // Utilisez QuoridorCore_isFeasibleRec1().
+    if (!QuoridorCore_isFeasibleRec0(self, explored, self->positions[0].i, self->positions[0].j)) return false;
+    memset(explored, 0, sizeof(explored));
+    if (!QuoridorCore_isFeasibleRec1(self, explored, self->positions[1].i, self->positions[1].j)) return false;
 
-    return false;
+    return true;
 }
 
 bool QuoridorCore_canMoveTo(QuoridorCore *self, int nextI, int nextJ)
@@ -144,7 +254,17 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j)
     assert(self->wallCounts[self->playerID] > 0);
     
     // TODO
-    // Placez le mur.
+    switch (type)
+    {
+    case WALL_TYPE_VERTICAL:
+        self->vWalls[i][j] = WALL_STATE_START;
+        self->vWalls[i + 1][j] = WALL_STATE_END;
+        break;
+    default:
+        self->hWalls[i][j] = WALL_STATE_START;
+        self->hWalls[i][j+1] = WALL_STATE_END;
+        break;
+    }
 
     self->playerID ^= 1;
     QuoridorCore_updateValidMoves(self);
@@ -156,9 +276,17 @@ void QuoridorCore_moveTo(QuoridorCore *self, int i, int j)
     assert(0 <= j && j < self->gridSize);
 
 
-    // TODO
+    // TODO Done
     // Déplacez le pion.
     // Changez l'état de la partie si le joueur vient de gagner.
+    self->positions[self->playerID].i = i;
+    self->positions[self->playerID].j = j;
+
+    if (!self->playerID && j == self->gridSize - 1)
+        self->state = QUORIDOR_STATE_P0_WON;
+    if (self->playerID && j == 0)
+        self->state = QUORIDOR_STATE_P1_WON;
+
 
     self->playerID ^= 1;
     QuoridorCore_updateValidMoves(self);
@@ -171,9 +299,16 @@ void QuoridorCore_playTurn(QuoridorCore *self, QuoridorTurn turn)
         assert(QuoridorCore_canMoveTo(self, turn.i, turn.j));
         QuoridorCore_moveTo(self, turn.i, turn.j);
     }
-
-    // TODO
-    // Complétez les autres actions possibles.
+    else if (turn.action == QUORIDOR_PLAY_HORIZONTAL_WALL)
+    {
+        assert(QuoridorCore_canPlayWall(self, WALL_TYPE_HORIZONTAL, turn.i, turn.j));
+        QuoridorCore_playWall(self, WALL_TYPE_HORIZONTAL, turn.i, turn.j);
+    }
+    else if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL)
+    {
+        assert(QuoridorCore_canPlayWall(self, WALL_TYPE_VERTICAL, turn.i, turn.j));
+        QuoridorCore_playWall(self, WALL_TYPE_VERTICAL, turn.i, turn.j);
+    }
 }
 
 void QuoridorCore_print(QuoridorCore *self)
