@@ -133,11 +133,11 @@ static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
 
     QuoridorPos* my_path = (QuoridorPos*)calloc(MAX_PATH_LEN, sizeof(QuoridorPos));
     QuoridorPos* other_path = (QuoridorPos*)calloc(MAX_PATH_LEN, sizeof(QuoridorPos));
-    int* my_distance;
-    int* other_distance;
+    int my_distance;
+    int other_distance;
 
-    QuoridorCore_getShortestPath(self, playerID, my_path, my_distance);
-    QuoridorCore_getShortestPath(self, playerID ^ 1, other_path, other_distance);
+    QuoridorCore_getShortestPath(self, playerID, my_path, &my_distance);
+    QuoridorCore_getShortestPath(self, playerID ^ 1, other_path, &other_distance);
 
     return my_distance - other_distance;
 }
