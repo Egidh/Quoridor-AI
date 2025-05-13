@@ -23,11 +23,100 @@ void AIData_reset(void *self)
 {
 }
 
+int Dijkstra_getNextNode(int *pred, int* dist, bool *explored, int size)
+{
+    int minDist = INT_MAX;
+    int posMinDist = -1;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (dist[i] < minDist && !explored[i])
+        {
+            minDist = dist[i];
+            posMinDist = i;
+        }
+    }
+    return posMinDist;
+}
+
 void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos *path, int *size)
 {
-    *size = 0;
+    int tileNumber = self->gridSize * self->gridSize;
 
-    // TODO
+    int *pred = (int*)calloc(tileNumber, sizeof(int));
+    int* dist = (int*)calloc(tileNumber, sizeof(int));
+    bool* explored = (bool*)calloc(tileNumber, sizeof(bool));
+
+    for (int i = 0; i < tileNumber; i++)
+    {
+        pred[i] = -1;
+        dist[i] = INT_MAX;
+    }
+    int pos = self->positions[playerID].i * self->gridSize + self->positions[playerID].j;
+    dist[pos] = 0;
+
+    int u = Dijkstra_getNextNode(pred, dist, explored,  tileNumber);
+    int i, j;
+    while (u != -1)
+    {
+        i = u / self->gridSize;
+        j = u % self->gridSize;
+        explored[u] = true;
+        if (!QuoridorCore_hasWallAbove(self, i, j))
+        {
+            if (dist[u] + 1 < dist[u - self->gridSize])
+            {
+                pred[u - self->gridSize] = u;
+                dist[u - self->gridSize] = dist[u] + 1;
+            }
+        }
+        if (!QuoridorCore_hasWallBelow(self, i, j))
+        {
+            if (dist[u] + 1 < dist[u + self->gridSize])
+            {
+                pred[u + self->gridSize] = u;
+                dist[u + self->gridSize] = dist[u] + 1;
+            }
+        }
+        if (!QuoridorCore_hasWallLeft(self, i, j))
+        {
+            if (dist[u] + 1 < dist[u - 1])
+            {
+                pred[u - 1] = u;
+                dist[u - 1] = dist[u] + 1;
+            }
+        }
+        if (!QuoridorCore_hasWallRight(self, i, j))
+        {
+            if (dist[u] + 1 < dist[u + 1])
+            {
+                pred[u + 1] = u;
+                dist[u + 1] = dist[u] + 1;
+            }
+        }
+        u = Dijkstra_getNextNode(pred, dist, explored, tileNumber);
+    }
+
+    int min = INT_MAX;
+    int minIndex = -1;
+    int offset = (playerID) ? 0 : self->gridSize - 1;
+    for (int k = 0; k < self->gridSize; k++)
+    {
+        if (dist[offset + k * self->gridSize] < min)
+        {
+            min = dist[offset + k * self->gridSize];
+            minIndex = offset + k * self->gridSize;
+        }
+    }
+
+    *size = min + 1;
+    for (int k = min - 1; k >= 0; k--)
+    {
+        path[k].i = pred[minIndex] / self->gridSize;
+        path[k].j = pred[minIndex] % self->gridSize;
+
+        minIndex = pred[minIndex];
+    }
 }
 
 /// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.

@@ -71,6 +71,7 @@ bool QuoridorCore_canPlayWall(QuoridorCore *self, WallType type, int i, int j)
 {
     if (i < 0 || i >= self->gridSize - 1) return false;
     if (j < 0 || j >= self->gridSize - 1) return false;
+    if (self->wallCounts[self->playerID] <= 0) return false;
 
     bool isFeasible;
 
@@ -232,7 +233,9 @@ bool QuoridorCore_isFeasible(QuoridorCore *self)
 
     // TODO
     if (!QuoridorCore_isFeasibleRec0(self, explored, self->positions[0].i, self->positions[0].j)) return false;
+
     memset(explored, 0, sizeof(explored));
+
     if (!QuoridorCore_isFeasibleRec1(self, explored, self->positions[1].i, self->positions[1].j)) return false;
 
     return true;
@@ -266,6 +269,7 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j)
         break;
     }
 
+    self->wallCounts[self->playerID]--;
     self->playerID ^= 1;
     QuoridorCore_updateValidMoves(self);
 }
