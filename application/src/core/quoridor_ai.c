@@ -119,6 +119,16 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
     }
 }
 
+static float QuoridorCore_computeWall(QuoridorCore* self, int playerID, QuoridorPos *pos, WallType *type)
+{
+
+}
+
+static float QuoridorCore_computeMove(QuoridorCore* self, int playerID, QuoridorPos* pos)
+{
+
+}
+
 /// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
 /// Cette fonction est utilisée dans l'algorithme Min-Max pour estimer la qualité d'une position.
 /// Elle retourne une valeur représentant l'avantage du joueur playerID.
