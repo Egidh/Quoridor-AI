@@ -121,7 +121,7 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
 
 static float QuoridorCore_computeWall(QuoridorCore* self, int playerID, QuoridorPos *pos, WallType *type)
 {
-
+    //test
 }
 
 static float QuoridorCore_computeMove(QuoridorCore* self, int playerID, QuoridorPos* pos)
