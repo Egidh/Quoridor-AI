@@ -117,6 +117,10 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
 
         minIndex = pred[minIndex];
     }
+
+    free(pred);
+    free(dist);
+    free(explored);
 }
 
 /// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
