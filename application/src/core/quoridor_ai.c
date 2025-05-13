@@ -127,7 +127,7 @@ static float QuoridorCore_computeWall(QuoridorCore* self, int playerID, Quoridor
 
 static float QuoridorCore_computeMove(QuoridorCore* self, int playerID, QuoridorPos* pos)
 {
-
+    // test
 }
 
 /// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
