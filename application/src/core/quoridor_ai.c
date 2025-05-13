@@ -119,16 +119,6 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
     }
 }
 
-static float QuoridorCore_computeWall(QuoridorCore* self, int playerID, QuoridorPos *pos, WallType *type)
-{
-    
-}
-
-static float QuoridorCore_computeMove(QuoridorCore* self, int playerID, QuoridorPos* pos)
-{
-    
-}
-
 /// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
 /// Cette fonction est utilisée dans l'algorithme Min-Max pour estimer la qualité d'une position.
 /// Elle retourne une valeur représentant l'avantage du joueur playerID.
@@ -141,9 +131,15 @@ static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
     int playerA = playerID;
     int playerB = playerID ^ 1;
 
-    // TODO
+    QuoridorPos* my_path = (QuoridorPos*)calloc(MAX_PATH_LEN, sizeof(QuoridorPos));
+    QuoridorPos* other_path = (QuoridorPos*)calloc(MAX_PATH_LEN, sizeof(QuoridorPos));
+    int* my_distance;
+    int* other_distance;
 
-    return 0.f + Float_randAB(-0.1f, +0.1f);
+    QuoridorCore_getShortestPath(self, playerID, my_path, my_distance);
+    QuoridorCore_getShortestPath(self, playerID ^ 1, other_path, other_distance);
+
+    return my_distance - other_distance;
 }
 
 /// @brief Applique l'algorithme Min-Max (avec élagage alpha-bêta) pour déterminer le coup joué par l'IA.
