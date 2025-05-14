@@ -382,12 +382,22 @@ void UIQuoridor_updatePageSettings(UIQuoridor *self)
 
     UIButton_update(self->m_buttonBack);
 
+    int prevId = self->m_listMode->m_valueID;
+
     UIList_update(self->m_listMode);
     UIList_update(self->m_listLevel);
     UIList_update(self->m_listCPUTime);
     UIList_update(self->m_listGridSize);
     UIList_update(self->m_listWallCount);
     UIList_update(self->m_listRandStart);
+
+
+    int currId = self->m_listMode->m_valueID;
+    if (currId != prevId)
+    {
+        self->m_aiAccu = 0;
+        self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
+    }
 
     if (UIButton_isPressed(self->m_buttonBack))
     {

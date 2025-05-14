@@ -158,7 +158,7 @@ static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
 	int score = 0;
     score += (other_distance - my_distance) * 1.5;
     score += (self->wallCounts[playerID]) * 1;
-    score -= my_distance * 2;
+    score -= my_distance * 4;
 
     return score + Float_rand01();
 }
@@ -224,13 +224,20 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
 
 				if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
 				{
 					value = currValue;
 					*turn = currTurn;
 				}
+
+                if (maximizing && value >= beta || !maximizing && value <= alpha)
+                    return value;
+
+                alpha = (alpha < value && maximizing) ? value : alpha;
+                beta = (beta > value && !maximizing) ? value : beta;
+
                 gameCopy = *self;
             }
 
@@ -242,12 +249,19 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
                 if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
                     value = currValue;
                     *turn = currTurn;
                 }
+
+                if (maximizing && value >= beta || !maximizing && value <= alpha)
+                    return value;
+
+                alpha = (alpha < value && maximizing) ? value : alpha;
+                beta = (beta > value && !maximizing) ? value : beta;
+
                 gameCopy = *self;
             }
 
@@ -259,12 +273,19 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
                 if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
                     value = currValue;
                     *turn = currTurn;
                 }
+
+                if (maximizing && value >= beta || !maximizing && value <= alpha)
+                    return value;
+
+                alpha = (alpha < value && maximizing) ? value : alpha;
+                beta = (beta > value && !maximizing) ? value : beta;
+
                 gameCopy = *self;
             }
         }
