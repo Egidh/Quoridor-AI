@@ -110,7 +110,7 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
     }
 
     *size = min + 1;
-    for (int k = min - 1; k >= 0; k--)
+    for (int k = 0; k < min; k++)
     {
         path[k].i = pred[minIndex] / self->gridSize;
         path[k].j = pred[minIndex] % self->gridSize;
@@ -139,11 +139,28 @@ static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
     QuoridorPos* other_path = (QuoridorPos*)calloc(MAX_PATH_LEN, sizeof(QuoridorPos));
     int my_distance;
     int other_distance;
+        
 
     QuoridorCore_getShortestPath(self, playerID, my_path, &my_distance);
     QuoridorCore_getShortestPath(self, playerID ^ 1, other_path, &other_distance);
 
-    return my_distance - other_distance;
+    my_distance--;
+    other_distance--;
+
+    if (my_distance == 0)
+        return 8000;
+    if (other_distance == 0)
+        return -8000;
+
+    free(my_path);
+    free(other_path);
+
+	int score = 0;
+    score += (other_distance - my_distance) * 1.5;
+    score += (self->wallCounts[playerID]) * 1;
+    score -= my_distance * 2;
+
+    return score + Float_rand01();
 }
 
 /// @brief Applique l'algorithme Min-Max (avec élagage alpha-bêta) pour déterminer le coup joué par l'IA.
@@ -160,22 +177,26 @@ static float QuoridorCore_minMax(
     QuoridorCore *self, int playerID, int currDepth, int maxDepth,
     float alpha, float beta, QuoridorTurn *turn)
 {
-    if (self->state != QUORIDOR_STATE_IN_PROGRESS)
+    switch (self->state)
     {
-        // TODO
+    case QUORIDOR_STATE_P0_WON:
+        return (playerID == 1)? -8000 + currDepth*2 : 8000 - currDepth*2;
+    case QUORIDOR_STATE_P1_WON:
+        return (playerID == 1) ? 8000 - currDepth*2 : -8000 + currDepth*2;
+    default:
+        break;
     }
-    else if (currDepth >= maxDepth)
-    {
-        return QuoridorCore_computeScore(self, playerID);
-    }
+    
+    if (currDepth >= maxDepth) return QuoridorCore_computeScore(self, playerID);
 
     const int gridSize = self->gridSize;
+
     const int currI = self->positions[self->playerID].i;
     const int currJ = self->positions[self->playerID].j;
-    QuoridorTurn childTurn = { 0 };
+    const int otherI = self->positions[self->playerID ^1].i;
+    const int otherJ = self->positions[self->playerID ^1].j;
 
-    const bool maximizing = (currDepth % 2) == 0;
-    float value = maximizing ? -INFINITY : INFINITY;
+    QuoridorTurn childTurn = { 0 };
 
     // TODO
 
@@ -184,6 +205,70 @@ static float QuoridorCore_minMax(
     // Comme la structure QuoridorCore ne contient aucune allocation interne,
     // la copie s'éffectue simplement avec :
     // QuoridorCore gameCopy = *self;
+
+    bool maximizing = (!(currDepth & 1)) ? true : false;
+    float value = (maximizing) ? -INFINITY: INFINITY;
+    float currValue;
+
+    QuoridorCore gameCopy = *self;
+    QuoridorTurn currTurn;
+    for (int i = 0; i < gridSize; i++)
+    {
+        for (int j = 0; j < gridSize; j++)
+        {
+            // Déplacement
+            if (self->isValid[i][j])
+            {
+                currTurn.action = QUORIDOR_MOVE_TO;
+                currTurn.i = i;
+                currTurn.j = j;
+
+                QuoridorCore_playTurn(&gameCopy, currTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+
+				if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
+				{
+					value = currValue;
+					*turn = currTurn;
+				}
+                gameCopy = *self;
+            }
+
+            // Mur vertical
+            if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_VERTICAL, i, j))
+            {
+                currTurn.action = QUORIDOR_PLAY_VERTICAL_WALL;
+                currTurn.i = i;
+                currTurn.j = j;
+
+                QuoridorCore_playTurn(&gameCopy, currTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
+                {
+                    value = currValue;
+                    *turn = currTurn;
+                }
+                gameCopy = *self;
+            }
+
+            // Mur horizontal
+            if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_HORIZONTAL, i, j))
+            {
+                currTurn.action = QUORIDOR_PLAY_HORIZONTAL_WALL;
+                currTurn.i = i;
+                currTurn.j = j;
+
+                QuoridorCore_playTurn(&gameCopy, currTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
+                {
+                    value = currValue;
+                    *turn = currTurn;
+                }
+                gameCopy = *self;
+            }
+        }
+    }
 
     return value;
 }
