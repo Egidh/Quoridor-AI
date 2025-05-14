@@ -155,9 +155,12 @@ static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
     free(my_path);
     free(other_path);
 
-    int score = my_distance - other_distance;
+	int score = 0;
+    score += (other_distance - my_distance) * 1.5;
+    score += (self->wallCounts[playerID]) * 1;
+    score -= my_distance * 2;
 
-    return score;
+    return score + Float_rand01();
 }
 
 /// @brief Applique l'algorithme Min-Max (avec élagage alpha-bêta) pour déterminer le coup joué par l'IA.
@@ -177,9 +180,9 @@ static float QuoridorCore_minMax(
     switch (self->state)
     {
     case QUORIDOR_STATE_P0_WON:
-        return (playerID)? -8000 : 8000;
+        return (playerID == 1)? -8000 + currDepth*2 : 8000 - currDepth*2;
     case QUORIDOR_STATE_P1_WON:
-        return (playerID) ? 8000 : -8000;
+        return (playerID == 1) ? 8000 - currDepth*2 : -8000 + currDepth*2;
     default:
         break;
     }
@@ -221,22 +224,29 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID ^ 1, currDepth + 1, maxDepth, 0, 0, &childTurn);
-                if(maximizing)
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+
+				if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
+				{
+					value = currValue;
+					*turn = currTurn;
+				}
+                gameCopy = *self;
+            }
+
+            // Mur vertical
+            if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_VERTICAL, i, j))
+            {
+                currTurn.action = QUORIDOR_PLAY_VERTICAL_WALL;
+                currTurn.i = i;
+                currTurn.j = j;
+
+                QuoridorCore_playTurn(&gameCopy, currTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
-                    if (currValue > value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
-                }
-                else
-                {
-                    if (currValue < value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
+                    value = currValue;
+                    *turn = currTurn;
                 }
                 gameCopy = *self;
             }
@@ -249,52 +259,13 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID ^ 1, currDepth + 1, maxDepth, 0, 0, &childTurn);
-                if (maximizing)
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
-                    if (currValue > value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
-                }
-                else
-                {
-                    if (currValue < value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
+                    value = currValue;
+                    *turn = currTurn;
                 }
                 gameCopy = *self;
-            }
-
-            // Mur vertical
-            if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_VERTICAL, i, j))
-            {
-                currTurn.action = QUORIDOR_PLAY_VERTICAL_WALL;
-                currTurn.i = i;
-                currTurn.j = j;
-
-                QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID ^ 1, currDepth + 1, maxDepth, 0, 0, &childTurn);
-                if (maximizing)
-                {
-                    if (currValue > value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
-                }
-                else
-                {
-                    if (currValue < value)
-                    {
-                        value = currValue;
-                        *turn = currTurn;
-                    }
-                }
-				gameCopy = *self;
             }
         }
     }
