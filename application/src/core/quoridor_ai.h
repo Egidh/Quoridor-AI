@@ -50,3 +50,4 @@ INLINE QuoridorTurn QuoridorCore_computeMoodleTurn(QuoridorCore *self, void *aiD
     const int depth = 2;
     return QuoridorCore_computeTurn(self, depth, aiData);
 }
+
