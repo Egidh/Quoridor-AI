@@ -86,8 +86,6 @@ void QuoridorCore_getShortestPath(QuoridorCore* self, int playerID, QuoridorPos*
 		j = u % self->gridSize;
 		explored[u] = true;
 
-		if (j == jTarget) break;
-
 		if (!QuoridorCore_hasWallAbove(self, i, j))
 		{
 			if (dist[u] + 1 < dist[u - self->gridSize])
@@ -120,12 +118,18 @@ void QuoridorCore_getShortestPath(QuoridorCore* self, int playerID, QuoridorPos*
 				dist[u + 1] = dist[u] + 1;
 			}
 		}
+
+		if (j == jTarget) break;
 		u = Dijkstra_getNextNode(pred, dist, explored, tileNumber);
 	}
 
 	int minIndex = i * self->gridSize + j;
 	*size = dist[minIndex] + 1;
-	for (int k = 0; k < *size; k++)
+
+	path[0].i = i;
+	path[0].j = j;
+
+	for (int k = 1; k < *size; k++)
 	{
 		path[k].i = pred[minIndex] / self->gridSize;
 		path[k].j = pred[minIndex] % self->gridSize;
@@ -159,46 +163,54 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	QuoridorCore_getShortestPath(self, playerID, my_path.tiles, &(my_path.size));
 	QuoridorCore_getShortestPath(self, playerID ^ 1, other_path.tiles, &(other_path.size));
 
-	if (my_path.size - 1 == 1)
-		return 10000;
-	if (other_path.size - 1 == 1)
-		return -10000;
+	if (self->playerID == playerID)
+	{
+		if (my_path.size - 1 == 1)
+			return 9000;
+		if (other_path.size - 1 == 1)
+			return -9000;
+	}
+	else
+	{
+		if (other_path.size - 1 == 1)
+			return -9000;
+		if (my_path.size - 1 == 1)
+			return 9000;
+	}
 
 	float score = 0;
-	score -= my_path.size;
+	score -= my_path.size * 2;
 	score += (other_path.size - my_path.size) * 2.5;
-	score += self->wallCounts[playerID] * 1;
+	//score += self->wallCounts[playerID] * 1;
 
 	return score + Float_rand01();
 }
 
-static float QuoridorCore_computeWall(QuoridorCore self, QuoridorPath my_path, QuoridorPath other_path, QuoridorTurn turn)
+static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorPath my_path, QuoridorPath other_path, QuoridorTurn turn)
 {
 	// Un coup de la victoire / défaite
-	if (my_path.size - 1 == 1 && (turn.i != other_path.tiles[0].i && turn.i != other_path.tiles[0].i - 1) && turn.j != other_path.tiles[0].j)
-		return 10000;
-	if (other_path.size - 1 == 1 && (turn.i != other_path.tiles[0].i && turn.i != other_path.tiles[0].i - 1) && turn.j != other_path.tiles[0].j)
-		return -10000;
+	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL && other_path.size - 1 == 1 && (turn.i == other_path.tiles[1].i || turn.i == other_path.tiles[1].i - 1) && turn.j == other_path.tiles[playerID].j)
+		return (playerID == self.playerID)? 10000: -10000;
 
 	float score = 0;
 	score += (other_path.size - my_path.size) * 2.5;
 
-	for (int i = 0; i < other_path.size; i++)
-	{
-		if (turn.i == other_path.tiles[i].i)
-			score += 20 - abs(turn.i - other_path.tiles[i].i);
-		if (turn.j == other_path.tiles[i].j)
-			score += 20 - abs(turn.j - other_path.tiles[i].j);
-	}
+	//for (int i = 0; i < other_path.size; i++)
+	//{
+	//	if (turn.i == other_path.tiles[i].i)
+	//		score += 20 - abs(turn.i - other_path.tiles[i].i);
+	//	if (turn.j == other_path.tiles[i].j)
+	//		score += 20 - abs(turn.j - other_path.tiles[i].j);
+	//}
 
 	int count = 0;
-	for (int i = 0; i < turn.i; i++)
+	for (int i = turn.i - 1; i >= 0; i--)
 	{
 		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
 		else break;
 	}
 	count = 0;
-	for (int i = turn.i; i < self.gridSize; i++)
+	for (int i = turn.i + 2; i < self.gridSize; i++)
 	{
 		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
 		else break;
@@ -311,7 +323,8 @@ static float QuoridorCore_minMax(
 				list[pos].turn.action = QUORIDOR_PLAY_VERTICAL_WALL;
 				list[pos].turn.i = i;
 				list[pos].turn.j = j;
-				list[pos].value = QuoridorCore_computeWall(gameCopy, my_path, other_path, list[pos++].turn);
+				list[pos].value = QuoridorCore_computeWall(gameCopy, playerID, my_path, other_path, list[pos].turn);
+				pos++;
 			}
 
 			if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_HORIZONTAL, i, j))
@@ -319,7 +332,8 @@ static float QuoridorCore_minMax(
 				list[pos].turn.action = QUORIDOR_PLAY_HORIZONTAL_WALL;
 				list[pos].turn.i = i;
 				list[pos].turn.j = j;
-				list[pos].value = QuoridorCore_computeWall(gameCopy, my_path, other_path, list[pos++].turn);
+				list[pos].value = QuoridorCore_computeWall(gameCopy, playerID, my_path, other_path, list[pos].turn);
+				pos++;
 			}
 		}
 	}
