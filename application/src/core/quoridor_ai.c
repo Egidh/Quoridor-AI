@@ -153,35 +153,20 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	QuoridorPath my_path;
 	QuoridorPath other_path;
 
-	int currI = self->positions[playerID].i;
-	int currJ = self->positions[playerID].j;
-
-	int otherI = self->positions[playerID ^ 1].i;
-	int otherJ = self->positions[playerID ^ 1].j;
-
-
 	QuoridorCore_getShortestPath(self, playerID, my_path.tiles, &(my_path.size));
 	QuoridorCore_getShortestPath(self, playerID ^ 1, other_path.tiles, &(other_path.size));
 
-	if (self->playerID == playerID)
-	{
-		if (my_path.size - 1 == 1)
-			return 9000;
-		if (other_path.size - 1 == 1)
-			return -9000;
-	}
-	else
-	{
-		if (other_path.size - 1 == 1)
-			return -9000;
-		if (my_path.size - 1 == 1)
-			return 9000;
-	}
-
 	float score = 0;
-	score -= my_path.size * 2;	
-	score += other_path.size * 3;
+	score -= my_path.size * 2.5;
+	score += other_path.size * 4;
 	score += self->wallCounts[playerID] * 1;
+	score += (playerID ^ 1 == 0) ? self->gridSize - self->positions[playerB].j : self->positions[playerB].j;
+	score += (playerID == 0) ? self->positions[playerA].j : self->gridSize - self->positions[playerA].j;
+
+	if (my_path.size - 1 == 1 && self->playerID == playerID)
+		score += 9000;
+	else if (other_path.size - 1 == 1)
+		score -= 9000;
 
 	return score + Float_rand01();
 }
@@ -190,26 +175,26 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 {
 	// Un coup de la victoire / défaite
 	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL && other_path.size - 1 == 1 && (turn.i == other_path.tiles[1].i || turn.i == other_path.tiles[1].i - 1) && turn.j == other_path.tiles[playerID].j)
-		return (playerID == self.playerID)? 10000: -10000;
+		return (playerID == self.playerID) ? 10000 : -10000;
 
 	float score = 0;
-	score += (other_path.size - my_path.size) * 2.5;
+	score += other_path.size * 3;
+	score -= my_path.size * 2.5;
 
 	for (int i = 0; i < other_path.size; i++)
 	{
 		if (turn.i == other_path.tiles[i].i)
-			score += 10 - abs(turn.i - other_path.tiles[i].i);
+			score += 7 - abs(turn.i - other_path.tiles[i].i);
 		if (turn.j == other_path.tiles[i].j)
 			score += 10 - abs(turn.j - other_path.tiles[i].j);
 	}
 
-	int count = 0;
+
 	for (int i = turn.i - 1; i >= 0; i--)
 	{
 		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
 		else break;
 	}
-	count = 0;
 	for (int i = turn.i + 2; i < self.gridSize; i++)
 	{
 		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
@@ -223,8 +208,10 @@ int QuoridorCore_compareWall(const void* first, const void* second)
 {
 	TurnToSort a = *(TurnToSort*)first;
 	TurnToSort b = *(TurnToSort*)second;
+
 	if (a.turn.action == QUORIDOR_ACTION_UNDEFINED) return 1;
 	if (b.turn.action == QUORIDOR_ACTION_UNDEFINED) return -1;
+
 	if (a.value < b.value) return 1;
 	if (a.value > b.value) return -1;
 	else return 0;
@@ -342,7 +329,7 @@ static float QuoridorCore_minMax(
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-		for (int i = 0; i < 3; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
 			currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
@@ -375,6 +362,6 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 
 	const float alpha = -INFINITY;
 	const float beta = INFINITY;
-	float childValue = QuoridorCore_minMax(self, self->playerID, 0, depth, alpha, beta, &childTurn);
+	float childValue = QuoridorCore_minMax(self, self->playerID, 0, 5, alpha, beta, &childTurn);
 	return childTurn;
 }
