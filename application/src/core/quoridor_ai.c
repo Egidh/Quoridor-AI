@@ -14,6 +14,22 @@ typedef struct TurnToSort {
 	int value;
 }TurnToSort;
 
+typedef struct QuoridorPath {
+	QuoridorPos tiles[MAX_PATH_LEN];
+	int size;
+} QuoridorPath;
+
+/// @brief Indique si a est compris entre lowlimit et highlimit
+/// @brief fonction rajoutée par Samuel
+/// @param a La valeur à vérifier
+/// @param lowlimit La valeur max autorisée pour a
+/// @param highlimit La valeur min autorisée pour a
+/// @return True si lowlimit <= a <= highlimit, false sinon
+static bool isBetween(int a, int lowlimit, int highlimit)
+{
+	return (a >= lowlimit && a <= highlimit);
+}
+
 void* AIData_create(QuoridorCore* core)
 {
 	// Cette fonction n'est utile que si vous avez besoin de mémoriser des informations sur les coups précédents de l'IA.
@@ -130,11 +146,8 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	int playerA = playerID;
 	int playerB = playerID ^ 1;
 
-	QuoridorPos my_path[MAX_PATH_LEN];
-	QuoridorPos other_path[MAX_PATH_LEN];
-
-	int my_distance;
-	int other_distance;
+	QuoridorPath my_path;
+	QuoridorPath other_path;
 
 	int currI = self->positions[playerID].i;
 	int currJ = self->positions[playerID].j;
@@ -143,34 +156,54 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	int otherJ = self->positions[playerID ^ 1].j;
 
 
-	QuoridorCore_getShortestPath(self, playerID, my_path, &my_distance);
-	QuoridorCore_getShortestPath(self, playerID ^ 1, other_path, &other_distance);
+	QuoridorCore_getShortestPath(self, playerID, my_path.tiles, &(my_path.size));
+	QuoridorCore_getShortestPath(self, playerID ^ 1, other_path.tiles, &(other_path.size));
 
-	my_distance--;
-	other_distance--;
-
-	if (my_distance == 0)
+	if (my_path.size - 1 == 1)
 		return 10000;
-	if (other_distance == 0)
+	if (other_path.size - 1 == 1)
 		return -10000;
 
 	float score = 0;
-	score += (other_distance - my_distance) * 2.5;
+	score -= my_path.size;
+	score += (other_path.size - my_path.size) * 2.5;
+	score += self->wallCounts[playerID] * 1;
 
 	return score + Float_rand01();
 }
 
-static float QuoridorCore_computeWall(QuoridorPos* myPath, int myLen, QuoridorPos* otherPath, int otherLen, QuoridorTurn turn)
+static float QuoridorCore_computeWall(QuoridorCore self, QuoridorPath my_path, QuoridorPath other_path, QuoridorTurn turn)
 {
+	// Un coup de la victoire / défaite
+	if (my_path.size - 1 == 1 && (turn.i != other_path.tiles[0].i && turn.i != other_path.tiles[0].i - 1) && turn.j != other_path.tiles[0].j)
+		return 10000;
+	if (other_path.size - 1 == 1 && (turn.i != other_path.tiles[0].i && turn.i != other_path.tiles[0].i - 1) && turn.j != other_path.tiles[0].j)
+		return -10000;
+
 	float score = 0;
-	score += (otherLen - myLen)*2.5;
-	for (int i = 0; i < otherLen; i++)
+	score += (other_path.size - my_path.size) * 2.5;
+
+	for (int i = 0; i < other_path.size; i++)
 	{
-		if (turn.i == otherPath[i].i)
-			score++;
-		if (turn.j == otherPath[i].j)
-			score++;
+		if (turn.i == other_path.tiles[i].i)
+			score += 20 - abs(turn.i - other_path.tiles[i].i);
+		if (turn.j == other_path.tiles[i].j)
+			score += 20 - abs(turn.j - other_path.tiles[i].j);
 	}
+
+	int count = 0;
+	for (int i = 0; i < turn.i; i++)
+	{
+		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
+		else break;
+	}
+	count = 0;
+	for (int i = turn.i; i < self.gridSize; i++)
+	{
+		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score++;
+		else break;
+	}
+
 	return score + Float_rand01();
 }
 
@@ -235,11 +268,11 @@ static float QuoridorCore_minMax(
 	QuoridorCore gameCopy = *self;
 	QuoridorTurn currTurn;
 
-	QuoridorPos myPath[MAX_PATH_LEN];
-	QuoridorPos otherPath[MAX_PATH_LEN];
-	int mySize, otherSize;
-	QuoridorCore_getShortestPath(self, playerID, myPath, &mySize);
-	QuoridorCore_getShortestPath(self, playerID ^ 1, otherPath, &otherSize);
+	QuoridorPath my_path;
+	QuoridorPath other_path;
+
+	QuoridorCore_getShortestPath(self, playerID, my_path.tiles, &(my_path.size));
+	QuoridorCore_getShortestPath(self, playerID ^ 1, other_path.tiles, &(other_path.size));
 
 	TurnToSort list[MAX_NUM_WALL] = { 0 };
 	size_t pos = 0;
@@ -273,24 +306,25 @@ static float QuoridorCore_minMax(
 				gameCopy = *self;
 			}
 
-			if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_HORIZONTAL, i, j))
-			{
-				list[pos].turn.action = QUORIDOR_PLAY_HORIZONTAL_WALL;
-				list[pos].turn.i = i;
-				list[pos].turn.j = j;
-				list[pos].value = QuoridorCore_computeWall(myPath, mySize, otherPath, otherSize, list[pos++].turn);
-			}
 			if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_VERTICAL, i, j))
 			{
 				list[pos].turn.action = QUORIDOR_PLAY_VERTICAL_WALL;
 				list[pos].turn.i = i;
 				list[pos].turn.j = j;
-				list[pos].value = QuoridorCore_computeWall(myPath, mySize, otherPath, otherSize, list[pos++].turn);
+				list[pos].value = QuoridorCore_computeWall(gameCopy, my_path, other_path, list[pos++].turn);
+			}
+
+			if (QuoridorCore_canPlayWall(&gameCopy, WALL_TYPE_HORIZONTAL, i, j))
+			{
+				list[pos].turn.action = QUORIDOR_PLAY_HORIZONTAL_WALL;
+				list[pos].turn.i = i;
+				list[pos].turn.j = j;
+				list[pos].value = QuoridorCore_computeWall(gameCopy, my_path, other_path, list[pos++].turn);
 			}
 		}
 	}
 
-	if(pos > 0)
+	if (pos > 0)
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
