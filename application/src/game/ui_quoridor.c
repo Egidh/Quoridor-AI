@@ -175,6 +175,7 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
     QuoridorCore *core = Scene_getQuoridorCore(scene);
     for (int i = 0; i < 2; i++)
     {
+        //self->m_aiData[i] = NULL;
         self->m_aiData[i] = AIData_create(core);
     }
 
