@@ -190,7 +190,12 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "Mode", modeValues, sizeof(modeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG 
+    UIList_setSelected(self->m_listMode, 1);
+#else
     UIList_setSelected(self->m_listMode, 0);
+#endif
+
 
     const char *levelValues[] = { "easy", "medium", "hard" };
     self->m_listLevel = UIList_create(
@@ -206,7 +211,11 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "CPU minimal time", timeValues, sizeof(timeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG
+    UIList_setSelected(self->m_listCPUTime, 0);
+#else
     UIList_setSelected(self->m_listCPUTime, 2);
+#endif
 
     const char *gridValues[] = { "5 x 5", "7 x 7", "9 x 9" };
     self->m_listGridSize = UIList_create(
