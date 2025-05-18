@@ -58,6 +58,7 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
             if (self->m_aiAccu > minTime)
             {
                 QuoridorCore_playTurn(core, self->m_aiTurn);
+                QuoridorCore_print(core);
                 self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
                 return;
             }
@@ -635,6 +636,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->hWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncé (#800040)
+
+                int owner = core->hWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectHWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)
@@ -655,6 +664,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->vWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncé (#800040)
+
+                int owner = core->vWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectVWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)

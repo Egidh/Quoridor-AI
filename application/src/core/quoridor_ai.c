@@ -27,6 +27,11 @@ typedef struct QuoridorPath {
 	int size;
 } QuoridorPath;
 
+typedef struct Data {
+	QuoridorPath path;
+	bool upToDate;
+}Data;
+
 /// @brief Indique si a est compris entre lowlimit et highlimit
 /// @brief fonction rajoutée par Samuel
 /// @param a La valeur à vérifier
@@ -40,16 +45,22 @@ static bool isBetween(int a, int lowlimit, int highlimit)
 
 void* AIData_create(QuoridorCore* core)
 {
-	return NULL;
+	Data* data = (Data*)calloc(1, sizeof(Data));
+	return data;
 }
 
 void AIData_destroy(void* self)
 {
 	if (!self) return;
+	Data* data = self;
+	free(data);
 }
 
 void AIData_reset(void* self)
 {
+	if (!self) return;
+	Data* data = self;
+	data->upToDate = false;
 }
 
 #if DIJKSTRA
@@ -244,7 +255,7 @@ void QuoridorCore_getShortestPath(QuoridorCore* self, int playerID, QuoridorPos*
 /// @param self Instance du jeu Quoridor.
 /// @param playerID Indice du joueur à évaluer (0 ou 1).
 /// @return Une estimation numérique de l'avantage du joueur playerID.
-static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
+static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, QuoridorTurn turn)
 {
 	int playerA = playerID;
 	int playerB = playerID ^ 1;
@@ -262,7 +273,10 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	// Différence de distance à parcourir
 	score += (other_path.size - my_path.size) * 3;
 	//Nombre de murs restants
-	score += self->wallCounts[playerID] * 2;
+	if(other_path.size >= 4)
+		score += self->wallCounts[playerID] * 2;
+	else
+		score -= self->wallCounts[playerID] * 1.5;
 
 	// Temps à passer de retour au départ
 	for (int i = 0; i < my_path.size; i++) {
@@ -271,16 +285,21 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID)
 	}
 	for (int i = 0; i < other_path.size; i++) {
 		if (other_path.tiles[i].j == otherSpawn)
-			score += 2.5;
+			score += 3;
 	}
 
 	// Distance du centre
 	int center = self->gridSize / 2;
-	score += (abs(self->positions[playerB].i - center) + abs(self->positions[playerB].j - center)) * 2;
+	int center_score = (abs(self->positions[playerB].i - center) + abs(self->positions[playerB].j - center));
+	score -= center_score * 1;
+
+	// Inciter à jouer des murs un peu plus tot
+	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL && center_score <= 3)
+		score += 20;
 
 	// Condition victoire / défaite
 	if (my_path.size - 1 == 1)
-		score += (self->playerID == playerID) ? 9000 : 8000;
+		score += (self->playerID == playerA) ? 9000 : 8000;
 	else if (other_path.size - 1 == 1)
 		score -= (self->playerID == playerB) ? 9000 : 7000;
 
@@ -292,32 +311,45 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	// Un coup de la victoire / défaite
 	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL && other_path.size - 1 == 1 && (turn.i == other_path.tiles[1].i || turn.i == other_path.tiles[1].i - 1) && turn.j == other_path.tiles[playerID].j)
 		return (playerID == self.playerID) ? 10000 : -10000;
-
+	
+	// Différence des chemins
 	float score = 0;
 	score += (other_path.size - my_path.size) * 3;
 
+	// Proximité du chemin adverse + passage au spawn + chemin dans le dos
 	int mySpawn = (playerID == 0) ? 0 : self.gridSize - 1;
 	int otherSpawn = (playerID ^ 1 == 0) ? 0 : self.gridSize - 1;
-
 	for (int i = 0; i < other_path.size; i++) {
 		int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
-		score += (4 - distance) * 2;
+		score += (3 - distance) * 2;
+	}
+		if ((playerID == 0 && turn.j < self.positions[playerID].j) || (playerID == 1 && turn.j >= self.positions[playerID].j))
+			score += 20;
 
-		if (other_path.tiles[i].j == otherSpawn)
-			score += 2.5;
+	// Continuité des chemins
+	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL)
+	{
+		for (int i = turn.i - 1; i >= 0; i--) {
+			if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 7;
+			else break;
+		}
+		for (int i = turn.i + 2; i < self.gridSize; i++) {
+			if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 7;
+			else break;
+		}
+	}
+	else
+	{
+		for (int j = turn.j - 1; j >= 0; j--) {
+			if (self.hWalls[turn.i][j] != WALL_STATE_NONE) score += 4;
+			else break;
+		}
+		for (int j = turn.j + 2; j < self.gridSize; j++) {
+			if (self.hWalls[turn.i][j] != WALL_STATE_NONE) score += 4;
+			else break;
+		}
 	}
 
-	for (int i = turn.i - 1; i >= 0; i--) {
-		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 1.5;
-		else break;
-	}
-	for (int i = turn.i + 2; i < self.gridSize; i++) {
-		if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 1.5;
-		else break;
-	}
-
-	if (abs(turn.i - self.gridSize / 2) <= 1) score += 1;
-	if (abs(turn.j - self.gridSize / 2) <= 1) score += 1;
 
 	return score + Float_rand01();
 }
@@ -368,7 +400,7 @@ static float QuoridorCore_minMax(
 		break;
 	}
 
-	if (currDepth >= maxDepth) return QuoridorCore_computeScore(self, playerID);
+	if (currDepth >= maxDepth) return QuoridorCore_computeScore(self, playerID, *turn);
 
 	const int gridSize = self->gridSize;
 
@@ -414,6 +446,7 @@ static float QuoridorCore_minMax(
 				currTurn.i = i;
 				currTurn.j = j;
 
+				childTurn = currTurn;
 
 				QuoridorCore_playTurn(&gameCopy, currTurn);
 				currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn, AIdata);
@@ -467,6 +500,8 @@ static float QuoridorCore_minMax(
 		for (int i = 0; i < limit; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
+			childTurn = list[i].turn;
+
 			currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn, AIdata);
 			gameCopy = *self;
 #if DEBUG
@@ -507,10 +542,27 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 
 #if DEBUG
 	float childValue = QuoridorCore_minMax(self, self->playerID, 0, 5, alpha, beta, &childTurn, aiData);
-	for (int i = 0; i < 10; i++)
+	/*for (int i = 0; i < 10; i++)
 		printf("%d mouvements etudies a la profondeur %d\n", movesAtDepth[i], i);
 
-	printf("Total : %d noeuds\n", nodeVisited);
+	printf("Total : %d noeuds\n", nodeVisited);*/
+	char action[32];
+	switch (childTurn.action)
+	{
+	case QUORIDOR_PLAY_HORIZONTAL_WALL:
+		strcpy(action, "Mur horizontal");
+		break;
+	case QUORIDOR_PLAY_VERTICAL_WALL:
+		strcpy(action, "Mur vertical");
+		break;
+	case QUORIDOR_MOVE_TO:
+		strcpy(action, "Deplacement");
+		break;
+	default:
+		strcpy(action, "Euh..");
+		break;
+	}
+	printf("Action jouee : %s en (%d;%d)\n", action, childTurn.j, childTurn.i);
 	printf("Valeur du coup : %f, valeur moyenne des coups evalues : %f\n", childValue, totalValues / nodeVisited);
 
 	memset(movesAtDepth, 0, sizeof(movesAtDepth));

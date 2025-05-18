@@ -75,6 +75,11 @@ typedef struct QuoridorCore
     /// @brief Murs horizontaux placés sur le plateau.
     WallState hWalls[MAX_GRID_SIZE][MAX_GRID_SIZE];
 
+#if DEBUG
+    int hWallOwners[MAX_GRID_SIZE][MAX_GRID_SIZE]; // 0 ou 1 selon le joueur
+    int vWallOwners[MAX_GRID_SIZE][MAX_GRID_SIZE];
+#endif
+
     /// @brief Cases vers lesquelles le joueur courant peut se déplacer.
     /// Si isValid[i][j] vaut true, la case [i,j] est accessible.
     bool isValid[MAX_GRID_SIZE][MAX_GRID_SIZE];
