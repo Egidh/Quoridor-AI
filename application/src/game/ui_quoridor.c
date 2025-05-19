@@ -58,6 +58,7 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
             if (self->m_aiAccu > minTime)
             {
                 QuoridorCore_playTurn(core, self->m_aiTurn);
+                QuoridorCore_print(core);
                 self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
                 return;
             }
@@ -175,6 +176,7 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
     QuoridorCore *core = Scene_getQuoridorCore(scene);
     for (int i = 0; i < 2; i++)
     {
+        //self->m_aiData[i] = NULL;
         self->m_aiData[i] = AIData_create(core);
     }
 
@@ -190,7 +192,12 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "Mode", modeValues, sizeof(modeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG 
+    UIList_setSelected(self->m_listMode, 1);
+#else
     UIList_setSelected(self->m_listMode, 0);
+#endif
+
 
     const char *levelValues[] = { "easy", "medium", "hard" };
     self->m_listLevel = UIList_create(
@@ -206,7 +213,11 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "CPU minimal time", timeValues, sizeof(timeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG
+    UIList_setSelected(self->m_listCPUTime, 0);
+#else
     UIList_setSelected(self->m_listCPUTime, 2);
+#endif
 
     const char *gridValues[] = { "5 x 5", "7 x 7", "9 x 9" };
     self->m_listGridSize = UIList_create(
@@ -382,12 +393,22 @@ void UIQuoridor_updatePageSettings(UIQuoridor *self)
 
     UIButton_update(self->m_buttonBack);
 
+    int prevId = self->m_listMode->m_valueID;
+
     UIList_update(self->m_listMode);
     UIList_update(self->m_listLevel);
     UIList_update(self->m_listCPUTime);
     UIList_update(self->m_listGridSize);
     UIList_update(self->m_listWallCount);
     UIList_update(self->m_listRandStart);
+
+
+    int currId = self->m_listMode->m_valueID;
+    if (currId != prevId)
+    {
+        self->m_aiAccu = 0;
+        self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
+    }
 
     if (UIButton_isPressed(self->m_buttonBack))
     {
@@ -615,6 +636,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->hWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncé (#800040)
+
+                int owner = core->hWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectHWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)
@@ -635,6 +664,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->vWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncé (#800040)
+
+                int owner = core->vWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectVWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)

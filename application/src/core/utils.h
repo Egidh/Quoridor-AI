@@ -80,3 +80,4 @@ INLINE float Float_clamp01(float value)
 {
     return Float_clamp(value, 0.0f, 1.0f);
 }
+
