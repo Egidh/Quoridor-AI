@@ -6,6 +6,7 @@
 
 #include "core/quoridor_core.h"
 #include "core/utils.h"
+#include "engine/timer.h"
 
 #ifndef DEBUG
 #define DEBUG 0
@@ -74,6 +75,8 @@ void AIData_reset(void* self)
 	Data* data = self;
 	data->upToDate = false;*/
 }
+
+Timer* timer;
 
 #if DIJKSTRA
 int Dijkstra_getNextNode(int* pred, unsigned int* dist, bool* explored, int size)
@@ -270,43 +273,18 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, Quorido
 {
 	int playerA = playerID;
 	int playerB = playerID ^ 1;
+	int mySpawn = (playerA == 0) ? 0 : self->gridSize - 1;
+	int otherSpawn = (playerB == 0) ? 0 : self->gridSize - 1;
 
 	QuoridorPath my_path;
 	QuoridorPath other_path;
-
 	QuoridorCore_getShortestPath(self, playerA, my_path.tiles, &(my_path.size));
 	QuoridorCore_getShortestPath(self, playerB, other_path.tiles, &(other_path.size));
-
-	int mySpawn = (playerA == 0) ? 0 : self->gridSize - 1;
-	int otherSpawn = (playerB == 0) ? 0 : self->gridSize - 1;
 
 	float score = 0;
 	// Différence de distance à parcourir
 	score += (other_path.size - my_path.size) * 3;
 	score += (17 - my_path.size) * 2;
-
-	// Chemin de l'adversaire simple et court
-	if (other_path.size <= 4 && abs(self->positions[playerB].j - mySpawn) <= 3) {
-		score -= 10;
-	}
-
-	//Nombre de murs restants
-	score += self->wallCounts[playerA] * 1;
-
-	// Distance du centre
-	int center = self->gridSize / 2;
-
-	int center_score = (abs(self->positions[playerA].i - center) + abs(self->positions[playerA].j - center));
-	if (my_path.size >= center)
-		score += center_score * 1.5;
-
-	center_score = (abs(self->positions[playerB].i - center) + abs(self->positions[playerB].j - center));
-	if (other_path.size >= center)
-		score -= center_score * 1.5;
-
-	// Inciter à jouer des murs un peu plus tot
-	if (turn.action != QUORIDOR_MOVE_TO && abs(self->positions[playerB].j - otherSpawn) < center)
-		score += 10;
 
 	// Condition victoire / défaite
 	if (my_path.size - 1 == 1)
@@ -319,25 +297,18 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, Quorido
 
 static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorPath my_path, QuoridorPath other_path, QuoridorTurn turn)
 {
-	// Différence des chemins
 	float score = 0;
+
+	// Distance relative
 	score += (other_path.size - my_path.size) * 3;
 
-	// Proximité du chemin adverse
-	for (int i = 0; i < other_path.size; i++) {
+	// Proximité du chemin de l'adversaire
+	for (int i = 0; i < other_path.size; i++)
+	{
 		int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
-		score += (2 - distance) * 2;
+		if (distance <= 3)
+			score += 3;
 	}
-	for (int i = 0; i < my_path.size; i++) {
-		int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
-		if (turn.action == QUORIDOR_PLAY_HORIZONTAL_WALL)
-			score += (3 - distance) * 1.5;
-	}
-
-	// Proximité à l'adversaire
-	int distance = abs(turn.i - self.positions[playerID ^ 1].i) + abs(turn.j - self.positions[playerID ^ 1].j);
-	if (distance <= 3)
-		score += (3 - distance) * 1;
 
 	// Chemin dans notre dos
 	if ((playerID == 0 && turn.j < self.positions[playerID].j) || (playerID == 1 && turn.j >= self.positions[playerID].j))
@@ -346,9 +317,6 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	// Continuité des chemins
 	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL)
 	{
-		if (self.hWalls[turn.i][turn.j - 1] != WALL_STATE_NONE || self.hWalls[turn.i][turn.j + 1] != WALL_STATE_NONE)
-			score -= 25;
-
 		for (int i = turn.i - 1; i >= 0; i--) {
 			if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 1;
 			else break;
@@ -360,9 +328,6 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	}
 	else
 	{
-		if (self.vWalls[turn.i - 1][turn.j] != WALL_STATE_NONE || self.vWalls[turn.i + 1][turn.j] != WALL_STATE_NONE)
-			score -= 25;
-
 		for (int j = turn.j - 1; j >= 0; j--) {
 			if (self.hWalls[turn.i][j] != WALL_STATE_NONE) score += 1;
 			else break;
@@ -374,7 +339,7 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	}
 
 
-	return score + Float_rand01();
+	return score;
 }
 
 int QuoridorCore_compareWall(const void* first, const void* second)
@@ -425,6 +390,12 @@ static float QuoridorCore_minMax(
 
 	if (currDepth >= maxDepth) return QuoridorCore_computeScore(self, playerID, *turn);
 
+	if (Timer_getDelta(timer) > 500)
+	{
+		printf("timeout\n");
+		return -INFINITY;
+	}
+
 	const int gridSize = self->gridSize;
 
 	const int currI = self->positions[self->playerID].i;
@@ -464,6 +435,30 @@ static float QuoridorCore_minMax(
 
 	size_t pos = 0;
 	size_t movesPos = 1;
+
+	// On teste d'abord le meilleur mouvement de la profondeur max précédente
+	if (currDepth == 0 && turn->action != QUORIDOR_ACTION_UNDEFINED)
+	{
+		currTurn.action = turn->action;
+		currTurn.i = turn->i;
+		currTurn.j = turn->j;
+
+		QuoridorCore_playTurn(&gameCopy, currTurn);
+		currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn, AIdata);
+		gameCopy = *self;
+
+		if ((maximizing && currValue > value) || ((!maximizing) && currValue < value))
+		{
+			value = currValue;
+			*turn = currTurn;
+		}
+
+		if ((maximizing && value >= beta) || (!maximizing && value <= alpha))
+			return value;
+
+		alpha = (alpha < value && maximizing) ? value : alpha;
+		beta = (beta > value && !maximizing) ? value : beta;
+	}
 
 	for (int i = 0; i < gridSize; i++)
 	{
@@ -544,7 +539,7 @@ static float QuoridorCore_minMax(
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-		int limit = (pos < 7) ? pos : 7;
+		int limit = (pos < 6) ? pos : 6;
 		for (int i = 0; i < limit; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
@@ -584,12 +579,36 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 	const float alpha = -INFINITY;
 	const float beta = INFINITY;
 
+	float bestValue = -INFINITY;
+	QuoridorTurn bestTurn = { 0 };
+	float childValue = 0;
+
+	timer = Timer_create();
+	Timer_start(timer);
+	for (int i = 0; i < 6; i++)
+	{
+		if (Timer_getDeltaMS(timer) > 500)
+		{
+			printf("timeout\n");
+			break;
+		}
+		childValue = QuoridorCore_minMax(self, self->playerID, 0, i, alpha, beta, &childTurn, aiData);
+		if (childValue > bestValue)
+		{
+			bestValue = childValue;
+			bestTurn = childTurn;
+		}
+	}
+	Timer_destroy(timer);
+
+	childTurn = bestTurn;
+
 #if DEBUG == 0
-	float childValue = QuoridorCore_minMax(self, self->playerID, 0, depth, alpha, beta, &childTurn, aiData);
+	//float childValue = QuoridorCore_minMax(self, self->playerID, 0, depth, alpha, beta, &childTurn, aiData);
 #endif
 
 #if DEBUG
-	float childValue = QuoridorCore_minMax(self, self->playerID, 0, 5, alpha, beta, &childTurn, aiData);
+	//float childValue = QuoridorCore_minMax(self, self->playerID, 0, 5, alpha, beta, &childTurn, aiData);
 	/*for (int i = 0; i < 10; i++)
 		printf("%d mouvements etudies a la profondeur %d\n", movesAtDepth[i], i);
 
