@@ -267,6 +267,10 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j)
     case WALL_TYPE_VERTICAL:
         self->vWalls[i][j] = WALL_STATE_START;
         self->vWalls[i + 1][j] = WALL_STATE_END;
+#if DEBUG
+        self->vWallOwners[i][j] = self->playerID;
+        self->vWallOwners[i + 1][j] = self->playerID;
+#endif
         break;
     case WALL_TYPE_VERTICAL_TEMP:
 		self->vWalls[i][j] = WALL_STATE_TEMP;
@@ -277,6 +281,10 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j)
     default:
         self->hWalls[i][j] = WALL_STATE_START;
         self->hWalls[i][j+1] = WALL_STATE_END;
+#if DEBUG
+        self->hWallOwners[i][j] = self->playerID;
+        self->hWallOwners[i][j+1] = self->playerID;
+#endif
         break;
     }
     

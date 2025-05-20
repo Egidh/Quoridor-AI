@@ -79,7 +79,7 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
    
     UIQoridor_resetTempAction(self); // On reset les actions temporaires
 
-    // On récupère l'action qui est à faire
+    // On rÃ©cupÃ¨re l'action qui est Ã  faire
     FILE* file = fopen(FILE_TO_SAVE_GAME, "r+");
 	if (file == NULL) return;
     QuoridorTurn* turn = malloc(sizeof(QuoridorTurn));
@@ -100,7 +100,7 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
     }
     
     
-    // On éxécute le mouvement
+    // On Ã©xÃ©cute le mouvement
 	self->m_listMode->m_valueID = isIA;
 
     // On veut voir quel coup est le meilleur
@@ -117,7 +117,7 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
 	QuoridorCore_playTurn(&gameCopy, bestTurn);
 	float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID);
 
-	printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnées sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
+	printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnÃ©es sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
 
     // Score du coup
     int score = UIQuoridor_calculateScore(scorePlayer, scoreIA);
@@ -212,6 +212,8 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
             {
                 QuoridorCore_playTurn(core, self->m_aiTurn);
                 UIQuoridor_saveTurnInFile(self, &self->m_aiTurn);
+                QuoridorCore_print(core);
+
                 self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
                 return;
             }
@@ -349,6 +351,7 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
     QuoridorCore *core = Scene_getQuoridorCore(scene);
     for (int i = 0; i < 2; i++)
     {
+        //self->m_aiData[i] = NULL;
         self->m_aiData[i] = AIData_create(core);
     }
 
@@ -364,7 +367,12 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "Mode", modeValues, sizeof(modeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG 
+    UIList_setSelected(self->m_listMode, 1);
+#else
     UIList_setSelected(self->m_listMode, 0);
+#endif
+
 
     const char *levelValues[] = { "easy", "medium", "hard" };
     self->m_listLevel = UIList_create(
@@ -380,7 +388,11 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
         "CPU minimal time", timeValues, sizeof(timeValues) / sizeof(char *),
         g_colors.white, g_colors.cell, g_colors.selected
     );
+#if DEBUG
+    UIList_setSelected(self->m_listCPUTime, 0);
+#else
     UIList_setSelected(self->m_listCPUTime, 2);
+#endif
 
     const char *gridValues[] = { "5 x 5", "7 x 7", "9 x 9" };
     self->m_listGridSize = UIList_create(
@@ -651,6 +663,8 @@ void UIQuoridor_updatePageSettings(UIQuoridor *self)
 
     UIButton_update(self->m_buttonBack);
 
+    int prevId = self->m_listMode->m_valueID;
+
     UIList_update(self->m_listMode);
     UIList_update(self->m_listLevel);
     UIList_update(self->m_listCPUTime);
@@ -914,6 +928,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->hWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncÃ© (#800040)
+
+                int owner = core->hWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectHWalls[i][j]));
             }
             else if (core->hWalls[i][j] == WALL_STATE_TEMP) {
@@ -938,6 +960,14 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             if (core->vWalls[i][j] == WALL_STATE_START)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
+#if DEBUG
+                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet foncÃ© (#800040)
+
+                int owner = core->vWallOwners[i][j];
+                SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
+                Game_setRenderDrawColor(color, 255);
+#endif
                 SDL_RenderFillRect(g_renderer, &(self->m_rectVWalls[i][j]));
             }
             else if (core->vWalls[i][j] == WALL_STATE_TEMP) {
