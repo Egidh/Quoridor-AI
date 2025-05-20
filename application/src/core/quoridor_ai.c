@@ -266,7 +266,7 @@ void QuoridorCore_getShortestPath(QuoridorCore* self, int playerID, QuoridorPos*
 /// @param self Instance du jeu Quoridor.
 /// @param playerID Indice du joueur à évaluer (0 ou 1).
 /// @return Une estimation numérique de l'avantage du joueur playerID.
-static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, QuoridorTurn turn)
+float QuoridorCore_computeScore(QuoridorCore* self, int playerID, QuoridorTurn turn)
 {
 	int playerA = playerID;
 	int playerB = playerID ^ 1;

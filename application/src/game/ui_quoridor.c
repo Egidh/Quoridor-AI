@@ -110,12 +110,12 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
     // Score du joueur
     QuoridorCore gameCopy = *core;
     QuoridorCore_playTurn(&gameCopy, *turn);
-    float scorePlayer = QuoridorCore_computeScore(&gameCopy, core->playerID);
+    float scorePlayer = QuoridorCore_computeScore(&gameCopy, core->playerID, *turn);
 
     // Score de l'IA
     gameCopy = *core;
 	QuoridorCore_playTurn(&gameCopy, bestTurn);
-	float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID);
+	float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID, bestTurn);
 
 	printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnées sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
 
@@ -662,8 +662,6 @@ void UIQuoridor_updatePageSettings(UIQuoridor *self)
     int prevId = self->m_listMode->m_valueID;
 
     UIButton_update(self->m_buttonBack);
-
-    int prevId = self->m_listMode->m_valueID;
 
     UIList_update(self->m_listMode);
     UIList_update(self->m_listLevel);

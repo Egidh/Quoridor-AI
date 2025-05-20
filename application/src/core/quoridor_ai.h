@@ -30,7 +30,8 @@ void AIData_reset(void *self);
 /// @param self Instance du jeu Quoridor.
 /// @param playerID Indice du joueur à évaluer (0 ou 1).
 /// @return Une estimation numérique de l'avantage du joueur playerID.
-float QuoridorCore_computeScore(QuoridorCore* self, int playerID);
+float QuoridorCore_computeScore(QuoridorCore* self, int playerID, QuoridorTurn turn);
+
 
 /// @brief Calcule le coup joué par l'IA selon un algorithme de type min-max.
 /// @param self Instance du jeu Quoridor.
