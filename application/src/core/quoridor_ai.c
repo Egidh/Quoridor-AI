@@ -479,6 +479,7 @@ static float QuoridorCore_minMax(
 					moves[0].i = i;
 					moves[0].j = j;
 				}
+
 				else
 				{
 					moves[movesPos].i = i;

@@ -31,4 +31,7 @@
 #define FHD_WIDTH 1920
 #define FHD_HEIGHT 1080
 
+#define FILE_TO_SAVE_GAME "../../data/test.txt"
+
 #define DEBUG 1
+
