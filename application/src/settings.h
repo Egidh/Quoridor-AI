@@ -33,5 +33,5 @@
 
 #define FILE_TO_SAVE_GAME "../../data/test.txt"
 
-#define DEBUG 1
+#define DEBUG 0
 

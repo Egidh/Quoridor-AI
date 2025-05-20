@@ -105,7 +105,7 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
 
     // On veut voir quel coup est le meilleur
     QuoridorTurn bestTurn;
-    bestTurn = QuoridorCore_computeTurn(core, 2, self->m_aiData[core->playerID]);
+    bestTurn = QuoridorCore_computeTurn(core, 6, self->m_aiData[core->playerID]);
 
     // Score du joueur
     QuoridorCore gameCopy = *core;
