@@ -6,11 +6,27 @@
 
 #include "core/quoridor_core.h"
 #include "core/utils.h"
-#include "engine/timer.h"
 
 #ifndef DEBUG
 #define DEBUG 0
 #include <limits.h>
+#endif
+
+#ifdef _MSC_VER
+#include <windows.h>
+double get_time_ms() {
+	LARGE_INTEGER freq, counter;
+	QueryPerformanceFrequency(&freq);
+	QueryPerformanceCounter(&counter);
+	return (1000.0 * counter.QuadPart) / freq.QuadPart;
+}
+#else
+#include <time.h>
+double get_time_ms() {
+	struct timespec ts;
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ts.tv_sec * 1000.0 + ts.tv_nsec / 1e6;
+}
 #endif
 
 #define DIJKSTRA 0
@@ -76,7 +92,7 @@ void AIData_reset(void* self)
 	data->upToDate = false;*/
 }
 
-Timer* timer;
+double start;
 
 #if DIJKSTRA
 int Dijkstra_getNextNode(int* pred, unsigned int* dist, bool* explored, int size)
@@ -390,12 +406,13 @@ static float QuoridorCore_minMax(
 
 	if (currDepth >= maxDepth) return QuoridorCore_computeScore(self, playerID, *turn);
 
-	if (Timer_getDelta(timer) > 500)
+	if (get_time_ms() - start > 500)
 	{
+#if DEBUG
 		printf("timeout\n");
+#endif
 		return -INFINITY;
 	}
-
 	const int gridSize = self->gridSize;
 
 	const int currI = self->positions[self->playerID].i;
@@ -539,7 +556,7 @@ static float QuoridorCore_minMax(
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-		int limit = (pos < 6) ? pos : 6;
+		int limit = (pos < 4) ? pos : 4;
 		for (int i = 0; i < limit; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
@@ -583,13 +600,14 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 	QuoridorTurn bestTurn = { 0 };
 	float childValue = 0;
 
-	timer = Timer_create();
-	Timer_start(timer);
-	for (int i = 0; i < 6; i++)
+	start = get_time_ms();
+	for (int i = 0; i < 8; i++)
 	{
-		if (Timer_getDeltaMS(timer) > 500)
+		if (get_time_ms() - start > 500)
 		{
+#if DEBUG
 			printf("timeout\n");
+#endif
 			break;
 		}
 		childValue = QuoridorCore_minMax(self, self->playerID, 0, i, alpha, beta, &childTurn, aiData);
@@ -599,7 +617,6 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 			bestTurn = childTurn;
 		}
 	}
-	Timer_destroy(timer);
 
 	childTurn = bestTurn;
 
