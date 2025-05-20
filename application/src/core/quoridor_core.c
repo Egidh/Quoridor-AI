@@ -17,6 +17,11 @@ QuoridorCore *QuoridorCore_create()
 
     QuoridorCore_reset(self, 9, 10, 0);
 
+	// On initialise le fichier de sauvegarde
+    FILE* file = fopen(FILE_TO_SAVE_GAME, "r+");
+    fprintf(file, "0\n");
+    fclose(file);
+
     return self;
 }
 
@@ -263,12 +268,18 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j)
         self->vWalls[i][j] = WALL_STATE_START;
         self->vWalls[i + 1][j] = WALL_STATE_END;
         break;
+    case WALL_TYPE_VERTICAL_TEMP:
+		self->vWalls[i][j] = WALL_STATE_TEMP;
+		return;
+    case WALL_TYPE_HORIZONTAL_TEMP:
+        self->hWalls[i][j] = WALL_STATE_TEMP;
+        return;
     default:
         self->hWalls[i][j] = WALL_STATE_START;
         self->hWalls[i][j+1] = WALL_STATE_END;
         break;
     }
-
+    
     self->wallCounts[self->playerID]--;
     self->playerID ^= 1;
     QuoridorCore_updateValidMoves(self);

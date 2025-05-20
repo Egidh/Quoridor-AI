@@ -29,6 +29,8 @@ typedef struct UIQuoridor
 
     Text *m_textTitleInfo;
     Text *m_textInfo;
+    Text* m_textTitleTurnInfo;
+    Text* m_textTurnInfo;
     Text *m_textTitleWalls;
     Text *m_textWalls[2];
     Text *m_textTitleDistances;
@@ -37,6 +39,9 @@ typedef struct UIQuoridor
 
     UIButton *m_buttonSettings;
     UIButton *m_buttonRestart;
+    UIButton* m_buttonReview;
+    UIButton* m_buttonExit;
+    UIButton* m_buttonNextStep;
     UIButton *m_buttonBack;
 
     UIList *m_listMode;
@@ -47,6 +52,7 @@ typedef struct UIQuoridor
     UIList *m_listRandStart;
 
     bool m_inSettings;
+    bool m_inReview;
 
     QuoridorTurn m_aiTurn;
     void *m_aiData[2];
@@ -54,17 +60,25 @@ typedef struct UIQuoridor
     Uint64 m_aiAccu;
 } UIQuoridor;
 
+/// @brief Enregistre les coups à faire dans un fichier text #FILE_TO_SAVE_GAME
+/// @param self Instance du jeu.
+/// @param turn Tour à sauvegarder.
+void UIQuoridor_saveTurnInFile(QuoridorCore* self, QuoridorTurn* turn);
+
 UIQuoridor *UIQuoridor_create(Scene *scene);
 void UIQuoridor_destroy(UIQuoridor *self);
 void UIQuoridor_update(UIQuoridor *self);
 void UIQuoridor_updateRects(UIQuoridor *self);
 void UIQuoridor_updatePageMain(UIQuoridor *self);
+void UIQuoridor_updatePageReview(UIQuoridor* self);
 void UIQuoridor_updatePageSettings(UIQuoridor *self);
 void UIQuoridor_updateTurn(UIQuoridor *self);
 
+void UIQuoridor_emptyFile();
 void UIQuoridor_restartQuoridor(UIQuoridor *self);
 
 void UIQuoridor_render(UIQuoridor *self);
 void UIQuoridor_renderPageMain(UIQuoridor *self);
 void UIQuoridor_renderPageSettings(UIQuoridor *self);
+void UIQuoridor_renderPageReview(UIQuoridor* self);
 void UIQuoridor_renderBoard(UIQuoridor *self);

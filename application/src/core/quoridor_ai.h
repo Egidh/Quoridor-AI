@@ -23,6 +23,15 @@ void AIData_destroy(void *self);
 /// @param self Pointeur vers les données de l'IA.
 void AIData_reset(void *self);
 
+/// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
+/// Cette fonction est utilisée dans l'algorithme Min-Max pour estimer la qualité d'une position.
+/// Elle retourne une valeur représentant l'avantage du joueur playerID.
+/// Une valeur positive indique un avantage pour ce joueur, une valeur négative indique un avantage pour l'adversaire.
+/// @param self Instance du jeu Quoridor.
+/// @param playerID Indice du joueur à évaluer (0 ou 1).
+/// @return Une estimation numérique de l'avantage du joueur playerID.
+float QuoridorCore_computeScore(QuoridorCore* self, int playerID);
+
 /// @brief Calcule le coup joué par l'IA selon un algorithme de type min-max.
 /// @param self Instance du jeu Quoridor.
 /// @param depth Profondeur de la recherche dans l'arbre de jeu.

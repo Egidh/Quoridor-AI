@@ -123,14 +123,7 @@ void QuoridorCore_getShortestPath(QuoridorCore *self, int playerID, QuoridorPos 
     free(explored);
 }
 
-/// @brief Calcule une heuristique d'évaluation de l'état du jeu pour un joueur donné.
-/// Cette fonction est utilisée dans l'algorithme Min-Max pour estimer la qualité d'une position.
-/// Elle retourne une valeur représentant l'avantage du joueur playerID.
-/// Une valeur positive indique un avantage pour ce joueur, une valeur négative indique un avantage pour l'adversaire.
-/// @param self Instance du jeu Quoridor.
-/// @param playerID Indice du joueur à évaluer (0 ou 1).
-/// @return Une estimation numérique de l'avantage du joueur playerID.
-static float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
+float QuoridorCore_computeScore(QuoridorCore *self, int playerID)
 {
     int playerA = playerID;
     int playerB = playerID ^ 1;
@@ -224,13 +217,25 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
 
 				if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
 				{
 					value = currValue;
 					*turn = currTurn;
 				}
+                if (maximizing)
+                {
+                    alpha = fmaxf(alpha, value);
+                }
+                else
+                {
+                    beta = fminf(beta, value);
+                }
+                if (alpha >= beta)
+                {
+                    return value;
+                }
                 gameCopy = *self;
             }
 
@@ -242,11 +247,24 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
                 if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
                     value = currValue;
                     *turn = currTurn;
+                }
+
+                if (maximizing)
+                {
+                    alpha = fmaxf(alpha, value);
+                }
+                else
+                {
+                    beta = fminf(beta, value);
+                }
+                if (alpha >= beta)
+                {
+                    return value;
                 }
                 gameCopy = *self;
             }
@@ -259,11 +277,24 @@ static float QuoridorCore_minMax(
                 currTurn.j = j;
 
                 QuoridorCore_playTurn(&gameCopy, currTurn);
-                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, 0, 0, &childTurn);
+                currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn);
                 if ((maximizing && currValue > value) || (!maximizing) && currValue < value)
                 {
                     value = currValue;
                     *turn = currTurn;
+                }
+
+                if (maximizing)
+                {
+                    alpha = fmaxf(alpha, value);
+                }
+                else
+                {
+                    beta = fminf(beta, value);
+                }
+                if (alpha >= beta)
+                {
+                    return value;
                 }
                 gameCopy = *self;
             }

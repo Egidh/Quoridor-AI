@@ -25,7 +25,12 @@ typedef enum WallState
 
     /// @brief Indique la fin d'un mur
     /// (partie droite pour un mur horizontal, partie basse pour un mur vertical).
-    WALL_STATE_END
+    WALL_STATE_END,
+
+    /// @biref Mur temporaire.
+    /// indique que le mur est temporaire et ne doit pas être pris en compte
+    WALL_STATE_TEMP
+
 } WallState;
 
 typedef enum WallType
@@ -35,6 +40,12 @@ typedef enum WallType
 
     /// @brief Mur vertical.
     WALL_TYPE_VERTICAL,
+
+    /// @biref Mur horizontal temporaire.
+    WALL_TYPE_HORIZONTAL_TEMP,
+
+    /// @biref Mur vertical temporaire.
+    WALL_TYPE_VERTICAL_TEMP,
 } WallType;
 
 typedef enum QuoridorState
@@ -47,6 +58,9 @@ typedef enum QuoridorState
 
     /// @brief Partie remportée par le joueur d'indice 1.
     QUORIDOR_STATE_P1_WON,
+
+    /// @brief Partie pas finie.
+    QUORIDOR_STATE_UNFINISHED,
 } QuoridorState;
 
 /// @brief Représente la position d'un pion sur le plateau de Quoridor.
@@ -78,6 +92,12 @@ typedef struct QuoridorCore
     /// @brief Cases vers lesquelles le joueur courant peut se déplacer.
     /// Si isValid[i][j] vaut true, la case [i,j] est accessible.
     bool isValid[MAX_GRID_SIZE][MAX_GRID_SIZE];
+
+    /// @brief Etat du plateau en mode Review.
+    /// 0 : case vide 
+    /// 1: Ancienne position 
+    /// 2: Position idéale
+    int reviewCore[MAX_GRID_SIZE][MAX_GRID_SIZE];
 
     /// @brief Identifiant du joueur courant (0 ou 1).
     int playerID;
