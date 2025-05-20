@@ -304,8 +304,15 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, Quorido
 
 	// Condition victoire / défaite
 	if (my_path.size - 1 == 1)
-		score += 9000;
-	if (other_path.size - 1 == 1)
+	{
+		if (other_path.size - 1 == 1 && self->playerID == playerID)
+			score += 8000;
+		else if (other_path.size - 1 == 1)
+			score += 9000;
+		else
+			score -= 9000;
+	}
+	else if (other_path.size - 1 == 1)
 		score -= 9000;
 
 	return score + (Float_rand01() / 2.0f);
@@ -313,18 +320,25 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, Quorido
 
 static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorPath my_path, QuoridorPath other_path, QuoridorTurn turn)
 {
+	// Différence des chemins
 	float score = 0;
-
-	// Distance relative
 	score += (other_path.size - my_path.size) * 3;
 
-	// Proximité du chemin de l'adversaire
-	for (int i = 0; i < other_path.size; i++)
-	{
+	// Proximité du chemin adverse
+	for (int i = 0; i < other_path.size; i++) {
 		int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
-		if (distance <= 3)
-			score += 3;
+		score += (2 - distance) * 2;
 	}
+	for (int i = 0; i < my_path.size; i++) {
+		int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
+		if (turn.action == QUORIDOR_PLAY_HORIZONTAL_WALL)
+			score += (3 - distance) * 1.5;
+	}
+
+	// Proximité à l'adversaire
+	int distance = abs(turn.i - self.positions[playerID ^ 1].i) + abs(turn.j - self.positions[playerID ^ 1].j);
+	if (distance <= 3)
+		score += (3 - distance) * 1;
 
 	// Chemin dans notre dos
 	if ((playerID == 0 && turn.j < self.positions[playerID].j) || (playerID == 1 && turn.j >= self.positions[playerID].j))
@@ -333,6 +347,9 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	// Continuité des chemins
 	if (turn.action == QUORIDOR_PLAY_VERTICAL_WALL)
 	{
+		if (self.hWalls[turn.i][turn.j - 1] != WALL_STATE_NONE || self.hWalls[turn.i][turn.j + 1] != WALL_STATE_NONE)
+			score -= 25;
+
 		for (int i = turn.i - 1; i >= 0; i--) {
 			if (self.vWalls[i][turn.j] != WALL_STATE_NONE) score += 1;
 			else break;
@@ -344,6 +361,9 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
 	}
 	else
 	{
+		if (self.vWalls[turn.i - 1][turn.j] != WALL_STATE_NONE || self.vWalls[turn.i + 1][turn.j] != WALL_STATE_NONE)
+			score -= 25;
+
 		for (int j = turn.j - 1; j >= 0; j--) {
 			if (self.hWalls[turn.i][j] != WALL_STATE_NONE) score += 1;
 			else break;
@@ -556,7 +576,7 @@ static float QuoridorCore_minMax(
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-		int limit = (pos < 4) ? pos : 4;
+		int limit = (pos < 11) ? pos : 11;
 		for (int i = 0; i < limit; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
@@ -601,7 +621,7 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 	float childValue = 0;
 
 	start = get_time_ms();
-	for (int i = 0; i < 8; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		if (get_time_ms() - start > 500)
 		{
