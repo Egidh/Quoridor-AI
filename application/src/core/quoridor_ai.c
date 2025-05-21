@@ -304,30 +304,39 @@ static float QuoridorCore_computeScore(QuoridorCore* self, int playerID, Quorido
 {
 	int playerA = playerID;
 	int playerB = playerID ^ 1;
-	int mySpawn = (playerA == 0) ? 0 : self->gridSize - 1;
-	int otherSpawn = (playerB == 0) ? 0 : self->gridSize - 1;
 
 	QuoridorPath my_path;
 	QuoridorPath other_path;
+
 	QuoridorCore_getShortestPath(self, playerA, my_path.tiles, &(my_path.size));
 	QuoridorCore_getShortestPath(self, playerB, other_path.tiles, &(other_path.size));
+
+	int mySpawn = (playerA == 0) ? 0 : self->gridSize - 1;
+	int otherSpawn = (playerB == 0) ? 0 : self->gridSize - 1;
 
 	float score = 0;
 	// Différence de distance à parcourir
 	score += (other_path.size - my_path.size) * 3;
 	score += (17 - my_path.size) * 2;
 
+	//Nombre de murs restants
+	score += self->wallCounts[playerA] * 1;
+
+	// Distance du centre
+	int center = self->gridSize / 2;
+
+	int center_score = (abs(self->positions[playerA].i - center) + abs(self->positions[playerA].j - center));
+	if (my_path.size >= center)
+		score += center_score * 1.5;
+
+	// Inciter à jouer des murs un peu plus tot
+	if (turn.action != QUORIDOR_MOVE_TO && abs(self->positions[playerB].j - otherSpawn) < center)
+		score += 10;
+
 	// Condition victoire / défaite
 	if (my_path.size - 1 == 1)
-	{
-		if (other_path.size - 1 == 1 && self->playerID == playerID)
-			score += 8000;
-		else if (other_path.size - 1 == 1)
-			score += 9000;
-		else
-			score -= 9000;
-	}
-	else if (other_path.size - 1 == 1)
+		score += 9000;
+	if (other_path.size - 1 == 1)
 		score -= 9000;
 
 	return score + (Float_rand01() / 2.0f);
