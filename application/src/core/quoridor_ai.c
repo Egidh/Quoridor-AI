@@ -92,6 +92,21 @@ void AIData_reset(void* self)
 	data->upToDate = false;*/
 }
 
+static bool QuoridorCore_canPlayTurn(QuoridorCore *self, QuoridorTurn turn)
+{
+	switch (turn.action)
+	{
+	case QUORIDOR_PLAY_HORIZONTAL_WALL:
+		return QuoridorCore_canPlayWall(self, WALL_TYPE_HORIZONTAL, turn.i, turn.j);
+	case QUORIDOR_PLAY_VERTICAL_WALL:
+		return QuoridorCore_canPlayWall(self, WALL_TYPE_VERTICAL, turn.i, turn.j);
+	case QUORIDOR_MOVE_TO:
+		return QuoridorCore_canMoveTo(self, turn.i, turn.j);
+	default:
+		return false;
+	}
+}
+
 double start;
 
 #if DIJKSTRA
@@ -456,6 +471,7 @@ static float QuoridorCore_minMax(
 
 	QuoridorCore gameCopy = *self;
 	QuoridorTurn currTurn;
+	QuoridorTurn bestTurn = { 0 };
 
 	QuoridorPath my_path;
 	QuoridorPath other_path;
@@ -474,7 +490,7 @@ static float QuoridorCore_minMax(
 	size_t movesPos = 1;
 
 	// On teste d'abord le meilleur mouvement de la profondeur max précédente
-	if (currDepth == 0 && turn->action != QUORIDOR_ACTION_UNDEFINED)
+	if (QuoridorCore_canPlayTurn(self, *turn))
 	{
 		currTurn.action = turn->action;
 		currTurn.i = turn->i;
@@ -488,6 +504,7 @@ static float QuoridorCore_minMax(
 		{
 			value = currValue;
 			*turn = currTurn;
+			bestTurn = childTurn;
 		}
 
 		if ((maximizing && value >= beta) || (!maximizing && value <= alpha))
@@ -497,6 +514,7 @@ static float QuoridorCore_minMax(
 		beta = (beta > value && !maximizing) ? value : beta;
 	}
 
+	// On trie les coups
 	for (int i = 0; i < gridSize; i++)
 	{
 		for (int j = 0; j < gridSize; j++)
@@ -548,6 +566,8 @@ static float QuoridorCore_minMax(
 		currTurn.i = moves[i].i;
 		currTurn.j = moves[i].j;
 
+		childTurn = bestTurn;
+
 		QuoridorCore_playTurn(&gameCopy, currTurn);
 		currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn, AIdata);
 		gameCopy = *self;
@@ -561,6 +581,7 @@ static float QuoridorCore_minMax(
 		{
 			value = currValue;
 			*turn = currTurn;
+			bestTurn = childTurn;
 		}
 
 		if ((maximizing && value >= beta) || (!maximizing && value <= alpha))
@@ -576,11 +597,12 @@ static float QuoridorCore_minMax(
 	{
 		qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-		int limit = (pos < 11) ? pos : 11;
+		int limit = (pos < 7) ? pos : 7;
 		for (int i = 0; i < limit; i++)
 		{
 			QuoridorCore_playTurn(&gameCopy, list[i].turn);
-			childTurn = list[i].turn;
+			
+			childTurn = bestTurn;
 
 			currValue = QuoridorCore_minMax(&gameCopy, playerID, currDepth + 1, maxDepth, alpha, beta, &childTurn, AIdata);
 			gameCopy = *self;
@@ -593,6 +615,7 @@ static float QuoridorCore_minMax(
 			{
 				value = currValue;
 				*turn = list[i].turn;
+				bestTurn = childTurn;
 			}
 
 			if ((maximizing && value >= beta) || (!maximizing && value <= alpha))
@@ -621,7 +644,7 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 	float childValue = 0;
 
 	start = get_time_ms();
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		if (get_time_ms() - start > 500)
 		{
