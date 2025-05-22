@@ -53,6 +53,7 @@ typedef struct UIQuoridor
     UIList *m_listRandStart;
 
     bool m_inSettings;
+    bool m_inReview;
 
     QuoridorTurn m_aiTurn;
     void *m_aiData[2];

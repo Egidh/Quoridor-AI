@@ -25,7 +25,12 @@ typedef enum WallState
 
     /// @brief Indique la fin d'un mur
     /// (partie droite pour un mur horizontal, partie basse pour un mur vertical).
-    WALL_STATE_END
+    WALL_STATE_END,
+
+    /// @biref Mur temporaire.
+    /// indique que le mur est temporaire et ne doit pas être pris en compte
+    WALL_STATE_TEMP
+
 } WallState;
 
 typedef enum WallType
@@ -35,6 +40,12 @@ typedef enum WallType
 
     /// @brief Mur vertical.
     WALL_TYPE_VERTICAL,
+
+    /// @biref Mur horizontal temporaire.
+    WALL_TYPE_HORIZONTAL_TEMP,
+
+    /// @biref Mur vertical temporaire.
+    WALL_TYPE_VERTICAL_TEMP,
 } WallType;
 
 typedef enum QuoridorState
@@ -47,6 +58,9 @@ typedef enum QuoridorState
 
     /// @brief Partie remportée par le joueur d'indice 1.
     QUORIDOR_STATE_P1_WON,
+
+    /// @brief Partie pas finie.
+    QUORIDOR_STATE_UNFINISHED,
 } QuoridorState;
 
 /// @brief Représente la position d'un pion sur le plateau de Quoridor.
@@ -84,6 +98,12 @@ typedef struct QuoridorCore
     /// Si isValid[i][j] vaut true, la case [i,j] est accessible.
     bool isValid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 
+    /// @brief Etat du plateau en mode Review.
+    /// 0 : case vide 
+    /// 1: Ancienne position 
+    /// 2: Position idéale
+    int reviewCore[MAX_GRID_SIZE][MAX_GRID_SIZE];
+
     /// @brief Identifiant du joueur courant (0 ou 1).
     int playerID;
 
@@ -96,23 +116,23 @@ typedef struct QuoridorCore
 
 /// @brief Crée une instance du jeu Quoridor.
 /// @return Un pointeur vers la structure créée.
-QuoridorCore *QuoridorCore_create();
+QuoridorCore* QuoridorCore_create();
 
 /// @brief Détruit une instance de Quoridor.
 /// @param self Instance à détruire.
-void QuoridorCore_destroy(QuoridorCore *self);
+void QuoridorCore_destroy(QuoridorCore* self);
 
 /// @brief Réinitialise une partie de Quoridor.
 /// @param self Instance du jeu Quoridor.
 /// @param gridSize Taille de la grille.
 /// @param wallCount Nombre de murs initiaux par joueur.
 /// @param firstPlayer Identifiant du premier joueur (0 ou 1).
-void QuoridorCore_reset(QuoridorCore *self, int gridSize, int wallCount, int firstPlayer);
+void QuoridorCore_reset(QuoridorCore* self, int gridSize, int wallCount, int firstPlayer);
 
 /// @brief Place 4 murs aléatoires sur le plateau.
 /// À appeler juste après QuoridorCore_reset().
 /// @param self Instance du jeu Quoridor.
-void QuoridorCore_randomStart(QuoridorCore *self);
+void QuoridorCore_randomStart(QuoridorCore* self);
 
 /// @brief Vérifie si le joueur courant peut poser un mur.
 /// @param self Instance du jeu Quoridor.
@@ -120,14 +140,14 @@ void QuoridorCore_randomStart(QuoridorCore *self);
 /// @param i Ligne cible.
 /// @param j Colonne cible.
 /// @return true si l'action est possible, false sinon.
-bool QuoridorCore_canPlayWall(QuoridorCore *self, WallType type, int i, int j);
+bool QuoridorCore_canPlayWall(QuoridorCore* self, WallType type, int i, int j);
 
 /// @brief Vérifie si le joueur courant peut se déplacer vers une case.
 /// @param self Instance du jeu Quoridor.
 /// @param i Ligne cible.
 /// @param j Colonne cible.
 /// @return true si le déplacement est possible, false sinon.
-bool QuoridorCore_canMoveTo(QuoridorCore *self, int i, int j);
+bool QuoridorCore_canMoveTo(QuoridorCore* self, int i, int j);
 
 /// @brief Effectue le placement d'un mur.
 /// Cette fonction ne vérifie pas la validité du coup.
@@ -136,7 +156,7 @@ bool QuoridorCore_canMoveTo(QuoridorCore *self, int i, int j);
 /// @param type Type du mur (horizontal ou vertical).
 /// @param i Ligne cible.
 /// @param j Colonne cible.
-void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j);
+void QuoridorCore_playWall(QuoridorCore* self, WallType type, int i, int j);
 
 /// @brief Effectue le déplacement du pion.
 /// Cette fonction ne vérifie pas la validité du coup.
@@ -144,11 +164,11 @@ void QuoridorCore_playWall(QuoridorCore *self, WallType type, int i, int j);
 /// @param self Instance du jeu Quoridor.
 /// @param i Ligne cible.
 /// @param j Colonne cible.
-void QuoridorCore_moveTo(QuoridorCore *self, int i, int j);
+void QuoridorCore_moveTo(QuoridorCore* self, int i, int j);
 
 /// @brief Affiche le plateau sur la sortie standard.
 /// @param self Instance du jeu Quoridor.
-void QuoridorCore_print(QuoridorCore *self);
+void QuoridorCore_print(QuoridorCore* self);
 
 typedef enum QuoridorAction
 {
@@ -183,7 +203,7 @@ typedef struct QuoridorTurn
 /// Vérifier au préalable avec canPlayWall() ou canMoveTo().
 /// @param self Instance du jeu Quoridor.
 /// @param turn Action à effectuer.
-void QuoridorCore_playTurn(QuoridorCore *self, QuoridorTurn turn);
+void QuoridorCore_playTurn(QuoridorCore* self, QuoridorTurn turn);
 
 
 /// @brief Vérifie s'il y a un mur horizontal au-dessus de [i,j].
@@ -192,7 +212,7 @@ void QuoridorCore_playTurn(QuoridorCore *self, QuoridorTurn turn);
 /// @param i Ligne.
 /// @param j Colonne.
 /// @return true s'il y a un mur, false sinon.
-INLINE bool QuoridorCore_hasWallAbove(QuoridorCore *self, int i, int j)
+INLINE bool QuoridorCore_hasWallAbove(QuoridorCore* self, int i, int j)
 {
     assert(0 <= i && i < self->gridSize);
     assert(0 <= j && j < self->gridSize);
@@ -205,7 +225,7 @@ INLINE bool QuoridorCore_hasWallAbove(QuoridorCore *self, int i, int j)
 /// @param i Ligne.
 /// @param j Colonne.
 /// @return true s'il y a un mur, false sinon.
-INLINE bool QuoridorCore_hasWallBelow(QuoridorCore *self, int i, int j)
+INLINE bool QuoridorCore_hasWallBelow(QuoridorCore* self, int i, int j)
 {
     assert(0 <= i && i < self->gridSize);
     assert(0 <= j && j < self->gridSize);
@@ -218,7 +238,7 @@ INLINE bool QuoridorCore_hasWallBelow(QuoridorCore *self, int i, int j)
 /// @param i Ligne.
 /// @param j Colonne.
 /// @return true s'il y a un mur, false sinon.
-INLINE bool QuoridorCore_hasWallLeft(QuoridorCore *self, int i, int j)
+INLINE bool QuoridorCore_hasWallLeft(QuoridorCore* self, int i, int j)
 {
     assert(0 <= i && i < self->gridSize);
     assert(0 <= j && j < self->gridSize);
@@ -231,7 +251,7 @@ INLINE bool QuoridorCore_hasWallLeft(QuoridorCore *self, int i, int j)
 /// @param i Ligne.
 /// @param j Colonne.
 /// @return true s'il y a un mur, false sinon.
-INLINE bool QuoridorCore_hasWallRight(QuoridorCore *self, int i, int j)
+INLINE bool QuoridorCore_hasWallRight(QuoridorCore* self, int i, int j)
 {
     assert(0 <= i && i < self->gridSize);
     assert(0 <= j && j < self->gridSize);
@@ -244,7 +264,7 @@ INLINE bool QuoridorCore_hasWallRight(QuoridorCore *self, int i, int j)
 /// @param i Ligne.
 /// @param j Colonne.
 /// @param isValid true si la case est atteignable, false sinon.
-INLINE void QuoridorCore_setValidPosition(QuoridorCore *self, int i, int j, bool isValid)
+INLINE void QuoridorCore_setValidPosition(QuoridorCore* self, int i, int j, bool isValid)
 {
     if (0 <= i && i < self->gridSize && 0 <= j && j < self->gridSize)
     {
