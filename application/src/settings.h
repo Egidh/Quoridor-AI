@@ -19,16 +19,25 @@
 #include <SDL3_ttf/SDL_ttf.h>
 
 #ifdef _MSC_VER
-#  define INLINE inline
+#define INLINE inline
 #else
-#  define INLINE static inline
+#define INLINE static inline
 #endif
 
-#define AssertNew(ptr) { if (ptr == NULL) { assert(false); abort(); } }
+#define AssertNew(ptr)     \
+    {                      \
+        if (ptr == NULL)   \
+        {                  \
+            assert(false); \
+            abort();       \
+        }                  \
+    }
 
 #define HD_WIDTH 1280
 #define HD_HEIGHT 720
 #define FHD_WIDTH 1920
 #define FHD_HEIGHT 1080
+
+#define FILE_TO_SAVE_GAME "../../data/test.txt"
 
 #define DEBUG 1

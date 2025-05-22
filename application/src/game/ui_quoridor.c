@@ -8,6 +8,27 @@
 #include "game/game_common.h"
 #include "game/scene.h"
 
+void UIQuoridor_emptyFile()
+{
+    FILE *file = fopen(FILE_TO_SAVE_GAME, "w+");
+    if (file == NULL)
+        return;
+
+    fprintf(file, "%d\n", 0);
+
+    fclose(file);
+}
+
+void UIQuoridor_saveTurnInFile(UIQuoridor *self, QuoridorTurn *turn)
+{
+
+    QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
+
+    FILE *file = fopen(FILE_TO_SAVE_GAME, "a");
+    fprintf(file, "%d %d %d %d %d\n", core->playerID, turn->i, turn->j, UIList_getSelected(self->m_listMode), turn->action);
+    fclose(file);
+}
+
 static bool UIQuoridor_isPlayerTurn(UIQuoridor *self)
 {
     assert(self && "The UIQuoridor must be created");
@@ -16,12 +37,156 @@ static bool UIQuoridor_isPlayerTurn(UIQuoridor *self)
     return (selectedMode == 0) || ((selectedMode == 1) && core->playerID == 0);
 }
 
+static int UIQuoridor_calculateScore(float score1, float score2)
+{
+    if (score1 > 0 && score2 < 0)
+        return 3;
+    if (score1 < 0 && score2 > 0)
+        return -2;
+    if (score1 > score2 + 1)
+        return 2;
+    if (score1 < score2 - 1)
+        return -1;
+    return 1;
+}
+
+static void UIQoridor_resetTempAction(UIQuoridor *self)
+{
+    assert(self && "The UIQuoridor must be created");
+
+    QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
+    if (core->state != QUORIDOR_STATE_IN_PROGRESS)
+        return;
+
+    for (int i = 0; i < core->gridSize; i++)
+    {
+        for (int j = 0; j < core->gridSize; j++)
+        {
+            if (core->vWalls[i][j] == WALL_STATE_TEMP)
+            {
+                core->vWalls[i][j] = WALL_STATE_NONE;
+            }
+            if (core->hWalls[i][j] == WALL_STATE_TEMP)
+            {
+                core->hWalls[i][j] = WALL_STATE_NONE;
+            }
+            core->reviewCore[i][j] = 0;
+        }
+    }
+}
+
+void UIQuoridor_nextTurn(UIQuoridor *self)
+{
+    assert(self && "The UIQuoridor must be created");
+
+    QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
+    if (core->state != QUORIDOR_STATE_IN_PROGRESS)
+        return;
+
+    UIQoridor_resetTempAction(self); // On reset les actions temporaires
+
+    // On récupère l'action qui est à faire
+    FILE *file = fopen(FILE_TO_SAVE_GAME, "r+");
+    if (file == NULL)
+        return;
+    QuoridorTurn *turn = malloc(sizeof(QuoridorTurn));
+
+    int playerID = -1;
+    int isIA = -1;
+
+    int round;
+    fscanf(file, "%d\n", &round);
+
+    int end;
+    for (int i = -1; i < round; i++)
+    {
+        end = fscanf(file, "%d %d %d %d %d", &playerID, &turn->i, &turn->j, &isIA, &turn->action);
+    }
+    if (end == EOF)
+    {
+        core->state = QUORIDOR_STATE_UNFINISHED;
+        return;
+    }
+
+    // On éxécute le mouvement
+    self->m_listMode->m_valueID = isIA;
+
+    // On veut voir quel coup est le meilleur
+    QuoridorTurn bestTurn;
+    bestTurn = QuoridorCore_computeTurn(core, 6, self->m_aiData[core->playerID]);
+
+    // Score du joueur
+    QuoridorCore gameCopy = *core;
+    QuoridorCore_playTurn(&gameCopy, *turn);
+    float scorePlayer = QuoridorCore_computeScore(&gameCopy, core->playerID, *turn);
+
+    // Score de l'IA
+    gameCopy = *core;
+    QuoridorCore_playTurn(&gameCopy, bestTurn);
+    float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID, bestTurn);
+
+    printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnées sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
+
+    // Score du coup
+    int score = UIQuoridor_calculateScore(scorePlayer, scoreIA);
+    switch (score)
+    {
+    case 3:
+        Text_setString(self->m_textTurnInfo, "INSANNEEE");
+        break;
+    case 2:
+        Text_setString(self->m_textTurnInfo, "Tres bon coup");
+        break;
+    case 1:
+        Text_setString(self->m_textTurnInfo, "Excellent coup");
+        break;
+    case -1:
+        Text_setString(self->m_textTurnInfo, "Mauvais coup");
+        break;
+    case -2:
+        Text_setString(self->m_textTurnInfo, "Tres mauvais coup");
+        break;
+    }
+    Text_setColor(self->m_textTurnInfo, core->playerID == 0 ? g_colors.player0 : g_colors.player1);
+
+    // ATTENTION QUAND ON PLACE UN MUR, IL FAUT MODIFIER LE FONCTIONNEMENT
+    // PAS CALCULER L'AVANCE
+
+    if (bestTurn.action == QUORIDOR_MOVE_TO)
+    {
+        core->reviewCore[bestTurn.i][bestTurn.j] = 2;
+        core->reviewCore[core->positions[core->playerID].i][core->positions[core->playerID].j] = 1;
+    }
+    QuoridorCore_playTurn(core, *turn);
+
+    if (score <= 2 && !(bestTurn.i == turn->i && bestTurn.j == turn->j && bestTurn.action == turn->action))
+    {
+        if (bestTurn.action == QUORIDOR_PLAY_HORIZONTAL_WALL)
+        {
+            QuoridorCore_playWall(core, WALL_TYPE_HORIZONTAL_TEMP, bestTurn.i, bestTurn.j);
+        }
+        else if (bestTurn.action == QUORIDOR_PLAY_VERTICAL_WALL)
+        {
+            QuoridorCore_playWall(core, WALL_TYPE_VERTICAL_TEMP, bestTurn.i, bestTurn.j);
+        }
+    }
+
+    // On ferme les fichiers
+    rewind(file);
+    fprintf(file, "%d", round + 1);
+    fclose(file);
+    free(turn);
+}
+
 void UIQuoridor_updateTurn(UIQuoridor *self)
 {
     assert(self && "The UIQuoridor must be created");
 
     QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
-    if (core->state != QUORIDOR_STATE_IN_PROGRESS) return;
+    if (core->state != QUORIDOR_STATE_IN_PROGRESS)
+        return;
+
+    UIQoridor_resetTempAction(self); // On reset les actions temporaires
 
     bool playerTurn = UIQuoridor_isPlayerTurn(self);
 
@@ -35,12 +200,20 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
             switch (UIList_getSelected(self->m_listLevel))
             {
             default:
-            case 0: depth = 2; break;
-            case 1: depth = 3; break;
-            case 2: depth = 5; break;
+            case 0:
+                depth = 2;
+                break;
+            case 1:
+                depth = 3;
+                break;
+            case 2:
+                depth = 5;
+                break;
             }
-
-            self->m_aiTurn = QuoridorCore_computeTurn(core, depth, self->m_aiData[core->playerID]);
+            if (core->playerID == 1)
+                self->m_aiTurn = QuoridorCore_computeTurn(core, depth, self->m_aiData[core->playerID]);
+            else
+                self->m_aiTurn = QuoridorCore_computeOtherTurn(core, depth, self->m_aiData[core->playerID]);
         }
         else
         {
@@ -49,10 +222,18 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
             switch (UIList_getSelected(self->m_listCPUTime))
             {
             default:
-            case 0: minTime = 0; break;
-            case 1: minTime = 100; break;
-            case 2: minTime = 500; break;
-            case 3: minTime = 1000; break;
+            case 0:
+                minTime = 0;
+                break;
+            case 1:
+                minTime = 100;
+                break;
+            case 2:
+                minTime = 500;
+                break;
+            case 3:
+                minTime = 1000;
+                break;
             }
 
             if (self->m_aiAccu > minTime)
@@ -69,7 +250,8 @@ void UIQuoridor_updateTurn(UIQuoridor *self)
         // Tour du joueur
         const int gridSize = core->gridSize;
         Input *input = Scene_getInput(self->m_scene);
-        if (input->validatePressed == false) return;
+        if (input->validatePressed == false)
+            return;
 
         Vec2 mousePos = input->mousePos;
         for (int i = 0; i < gridSize; i++)
@@ -126,7 +308,7 @@ static float UIQuoridor_renderPanel(
     const float panelHeight = titleH + textH + 2 * vPadding;
     const float titleSep = 2.f;
 
-    SDL_FRect dstRect = { 0 };
+    SDL_FRect dstRect = {0};
     dstRect.x = roundf(x);
     dstRect.y = roundf(y);
     dstRect.w = roundf(w);
@@ -170,92 +352,93 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
     UIQuoridor *self = (UIQuoridor *)calloc(1, sizeof(UIQuoridor));
     AssertNew(self);
 
+    UIQuoridor_emptyFile(); // On vide le dossier de sauvegarde
+
     self->m_scene = scene;
     self->m_aiTurn.action = QUORIDOR_ACTION_UNDEFINED;
 
     QuoridorCore *core = Scene_getQuoridorCore(scene);
     for (int i = 0; i < 2; i++)
     {
-        //self->m_aiData[i] = NULL;
+        // self->m_aiData[i] = NULL;
         self->m_aiData[i] = AIData_create(core);
     }
 
     AssetManager *assets = Scene_getAssetManager(scene);
     TTF_Font *font = NULL;
-    SDL_FRect rect = { .x = 0.f, .y = 0.f, .w = 100.f, .h = 100.f };
+    SDL_FRect rect = {.x = 0.f, .y = 0.f, .w = 100.f, .h = 100.f};
 
     // Listes pour les settings
     font = AssetManager_getFont(assets, FONT_NORMAL);
-    const char *modeValues[] = { "P vs P", "P vs CPU", "CPU vs CPU" };
+    const char *modeValues[] = {"P vs P", "P vs CPU", "CPU vs CPU"};
     self->m_listMode = UIList_create(
         scene, rect, 0.5f, font,
         "Mode", modeValues, sizeof(modeValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
-#if DEBUG 
+        g_colors.white, g_colors.cell, g_colors.selected);
+#if DEBUG
     UIList_setSelected(self->m_listMode, 1);
 #else
     UIList_setSelected(self->m_listMode, 0);
 #endif
 
-
-    const char *levelValues[] = { "easy", "medium", "hard" };
+    const char *levelValues[] = {"easy", "medium", "hard"};
     self->m_listLevel = UIList_create(
         scene, rect, 0.5f, font,
         "CPU Level", levelValues, sizeof(levelValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
     UIList_setSelected(self->m_listLevel, 0);
 
-    const char *timeValues[] = { "disabled", "100 ms", "500 ms", "1 s" };
+    const char *timeValues[] = {"disabled", "100 ms", "500 ms", "1 s"};
     self->m_listCPUTime = UIList_create(
         scene, rect, 0.5f, font,
         "CPU minimal time", timeValues, sizeof(timeValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
 #if DEBUG
     UIList_setSelected(self->m_listCPUTime, 0);
 #else
     UIList_setSelected(self->m_listCPUTime, 2);
 #endif
 
-    const char *gridValues[] = { "5 x 5", "7 x 7", "9 x 9" };
+    const char *gridValues[] = {"5 x 5", "7 x 7", "9 x 9"};
     self->m_listGridSize = UIList_create(
         scene, rect, 0.5f, font,
         "Grid size", gridValues, sizeof(gridValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
     UIList_setSelected(self->m_listGridSize, 2);
 
-    const char *wallValues[] = { "5 walls", "6 walls", "7 walls", "8 walls", "9 walls", "10 walls" };
+    const char *wallValues[] = {"5 walls", "6 walls", "7 walls", "8 walls", "9 walls", "10 walls"};
     self->m_listWallCount = UIList_create(
         scene, rect, 0.5f, font,
         "Mode", wallValues, sizeof(wallValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
     UIList_setSelected(self->m_listWallCount, 5);
 
-    const char *randStartValues[] = { "No", "Yes" };
+    const char *randStartValues[] = {"No", "Yes"};
     self->m_listRandStart = UIList_create(
         scene, rect, 0.5f, font,
         "Random start", randStartValues, sizeof(randStartValues) / sizeof(char *),
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
     UIList_setSelected(self->m_listRandStart, 0);
 
     // Boutons
     self->m_buttonSettings = UIButton_create(
         scene, rect, font, "Settings",
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
     self->m_buttonRestart = UIButton_create(
         scene, rect, font, "Restart",
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
+    self->m_buttonReview = UIButton_create(
+        scene, rect, font, "Review",
+        g_colors.white, g_colors.cell, g_colors.selected);
+    self->m_buttonExit = UIButton_create(
+        scene, rect, font, "Exit",
+        g_colors.white, g_colors.cell, g_colors.selected);
+    self->m_buttonNextStep = UIButton_create(
+        scene, rect, font, "Next",
+        g_colors.white, g_colors.cell, g_colors.selected);
     self->m_buttonBack = UIButton_create(
         scene, rect, font, "Back",
-        g_colors.white, g_colors.cell, g_colors.selected
-    );
+        g_colors.white, g_colors.cell, g_colors.selected);
 
     // Textes
     font = AssetManager_getFont(assets, FONT_NORMAL);
@@ -279,7 +462,8 @@ UIQuoridor *UIQuoridor_create(Scene *scene)
 
 void UIQuoridor_destroy(UIQuoridor *self)
 {
-    if (!self) return;
+    if (!self)
+        return;
 
     for (int i = 0; i < 2; i++)
     {
@@ -320,6 +504,10 @@ void UIQuoridor_update(UIQuoridor *self)
     {
         UIQuoridor_updatePageSettings(self);
     }
+    else if (self->m_inReview)
+    {
+        UIQuoridor_updatePageReview(self);
+    }
     else
     {
         UIQuoridor_updatePageMain(self);
@@ -343,12 +531,17 @@ void UIQuoridor_updatePageMain(UIQuoridor *self)
     {
         UIQuoridor_restartQuoridor(self);
     }
+    else if (UIButton_isPressed(self->m_buttonReview))
+    {
+        UIQuoridor_restartQuoridor(self);
+        self->m_inReview = true;
+    }
     else
     {
         UIQuoridor_updateTurn(self);
     }
 
-    char buffer[128] = { 0 };
+    char buffer[128] = {0};
     for (int i = 0; i < 2; i++)
     {
         sprintf(buffer, "%d", core->wallCounts[i]);
@@ -383,6 +576,70 @@ void UIQuoridor_updatePageMain(UIQuoridor *self)
         {
             Text_setString(self->m_textInfo, playerTurn ? "Player 2 WON" : "CPU 2 WON");
             Text_setColor(self->m_textInfo, g_colors.player1);
+        }
+    }
+}
+
+void UIQuoridor_updatePageReview(UIQuoridor *self)
+{
+    assert(self && "The UIQuoridor must be created");
+
+    QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
+
+    UIButton_update(self->m_buttonExit);
+    UIButton_update(self->m_buttonNextStep);
+
+    if (UIButton_isPressed(self->m_buttonExit))
+    {
+        self->m_inReview = false;
+        UIQuoridor_emptyFile(); // On vide le dossier de sauvegarde
+        UIQuoridor_restartQuoridor(self);
+    }
+    else if (UIButton_isPressed(self->m_buttonNextStep))
+    {
+        UIQuoridor_nextTurn(self);
+    }
+
+    char buffer[128] = {0};
+    for (int i = 0; i < 2; i++)
+    {
+        sprintf(buffer, "%d", core->wallCounts[i]);
+        Text_setString(self->m_textWalls[i], buffer);
+
+        QuoridorPos path[MAX_PATH_LEN];
+        int size = 0;
+        QuoridorCore_getShortestPath(core, i, path, &size);
+        sprintf(buffer, "%d", size - 1);
+        Text_setString(self->m_textDistances[i], buffer);
+    }
+
+    const bool playerTurn = UIQuoridor_isPlayerTurn(self);
+    if (core->state == QUORIDOR_STATE_IN_PROGRESS)
+    {
+        if (playerTurn)
+            sprintf(buffer, "Player %d turn", core->playerID + 1);
+        else
+            sprintf(buffer, "CPU %d turn", core->playerID + 1);
+
+        Text_setString(self->m_textInfo, buffer);
+        Text_setColor(self->m_textInfo, core->playerID == 0 ? g_colors.player0 : g_colors.player1);
+    }
+    else
+    {
+        if (core->state == QUORIDOR_STATE_P0_WON)
+        {
+            Text_setString(self->m_textInfo, playerTurn ? "Player 1 WON" : "CPU 1 WON");
+            Text_setColor(self->m_textInfo, g_colors.player0);
+        }
+        else if (core->state == QUORIDOR_STATE_P1_WON)
+        {
+            Text_setString(self->m_textInfo, playerTurn ? "Player 2 WON" : "CPU 2 WON");
+            Text_setColor(self->m_textInfo, g_colors.player1);
+        }
+        else
+        {
+            Text_setString(self->m_textInfo, "Interrupted game");
+            Text_setColor(self->m_textInfo, g_colors.white);
         }
     }
 }
@@ -426,21 +683,39 @@ void UIQuoridor_restartQuoridor(UIQuoridor *self)
     switch (UIList_getSelected(self->m_listWallCount))
     {
     default:
-    case 0: wallCount = 5; break;
-    case 1: wallCount = 6; break;
-    case 2: wallCount = 7; break;
-    case 3: wallCount = 8; break;
-    case 4: wallCount = 9; break;
-    case 5: wallCount = 10; break;
+    case 0:
+        wallCount = 5;
+        break;
+    case 1:
+        wallCount = 6;
+        break;
+    case 2:
+        wallCount = 7;
+        break;
+    case 3:
+        wallCount = 8;
+        break;
+    case 4:
+        wallCount = 9;
+        break;
+    case 5:
+        wallCount = 10;
+        break;
     }
 
     int gridSize = 0;
     switch (UIList_getSelected(self->m_listGridSize))
     {
     default:
-    case 0: gridSize = 5; break;
-    case 1: gridSize = 7; break;
-    case 2: gridSize = 9; break;
+    case 0:
+        gridSize = 5;
+        break;
+    case 1:
+        gridSize = 7;
+        break;
+    case 2:
+        gridSize = 9;
+        break;
     }
 
     QuoridorCore_reset(core, gridSize, wallCount, 0);
@@ -467,8 +742,8 @@ void UIQuoridor_updateRects(UIQuoridor *self)
     QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
     const int gridSize = core->gridSize;
 
-    Vec2 position = { 0 };
-    SDL_FRect rect = { 0 };
+    Vec2 position = {0};
+    SDL_FRect rect = {0};
 
     const float buttonH = Text_getHeight(self->m_buttonBack->m_label) + 20.f;
     position = Vec2_set(0.25f, 8.75f);
@@ -487,6 +762,10 @@ void UIQuoridor_updateRects(UIQuoridor *self)
 
     rect.x += roundf(rect.w + 0.2f * scale);
     UIButton_setRect(self->m_buttonRestart, rect);
+    UIButton_setRect(self->m_buttonNextStep, rect);
+
+    rect.x += roundf(rect.w + 0.2f * scale);
+    UIButton_setRect(self->m_buttonReview, rect);
 
     const float labelRatio = 0.4f;
     const float settingsW = 6.0f;
@@ -502,8 +781,7 @@ void UIQuoridor_updateRects(UIQuoridor *self)
         self->m_listRandStart,
     };
     const int listCount = sizeof(lists) / sizeof(lists[0]);
-    const float settingsH = (float)Text_getHeight(self->m_textTitleSettings)
-        + listCount * (buttonH + listSep) + titleSep;
+    const float settingsH = (float)Text_getHeight(self->m_textTitleSettings) + listCount * (buttonH + listSep) + titleSep;
 
     rect.h = (float)Text_getHeight(self->m_textTitleSettings);
     rect.w = (float)Text_getWidth(self->m_textTitleSettings);
@@ -525,8 +803,7 @@ void UIQuoridor_updateRects(UIQuoridor *self)
 
     const AABB worldRect = {
         .lower = Vec2_set(7.25f, 0.25f),
-        .upper = Vec2_set(15.75f, 8.75f)
-    };
+        .upper = Vec2_set(15.75f, 8.75f)};
     const float worldRectW = worldRect.upper.x - worldRect.lower.x;
     const float worldRectH = worldRect.upper.y - worldRect.lower.y;
 
@@ -606,6 +883,18 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
         for (int j = 0; j < gridSize; j++)
         {
             SDL_FRect rect = self->m_rectCells[i][j];
+
+            if (core->reviewCore[i][j] == 1)
+            {
+                Game_setRenderDrawColor((core->playerID == 0) ? g_colors.player1 : g_colors.player0, 100);
+                SDL_RenderFillRect(g_renderer, &rect);
+            }
+            else if (core->reviewCore[i][j] == 2)
+            {
+                Game_setRenderDrawColor(g_colors.green, 50);
+                SDL_RenderFillRect(g_renderer, &rect);
+            }
+
             if (i == core->positions[0].i && j == core->positions[0].j)
             {
                 Game_setRenderDrawColor(g_colors.player0, 255);
@@ -620,9 +909,11 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             {
                 Game_setRenderDrawColor(
                     (core->playerID == 0) ? g_colors.player0 : g_colors.player1,
-                    128
-                );
-                rect.x += rect.w / 3; rect.y += rect.h / 3; rect.w /= 3; rect.h /= 3;
+                    128);
+                rect.x += rect.w / 3;
+                rect.y += rect.h / 3;
+                rect.w /= 3;
+                rect.h /= 3;
                 SDL_RenderFillRect(g_renderer, &rect);
             }
         }
@@ -637,13 +928,18 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
 #if DEBUG
-                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
-                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet fonc� (#800040)
+                SDL_Color wall_player0 = {255, 69, 0, 255}; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = {255, 0, 0, 255};  // Red-violet foncé (#800040)
 
                 int owner = core->hWallOwners[i][j];
                 SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
                 Game_setRenderDrawColor(color, 255);
 #endif
+                SDL_RenderFillRect(g_renderer, &(self->m_rectHWalls[i][j]));
+            }
+            else if (core->hWalls[i][j] == WALL_STATE_TEMP)
+            {
+                Game_setRenderDrawColor(g_colors.green, 100);
                 SDL_RenderFillRect(g_renderer, &(self->m_rectHWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)
@@ -665,13 +961,18 @@ void UIQuoridor_renderBoard(UIQuoridor *self)
             {
                 Game_setRenderDrawColor(g_colors.wall, 255);
 #if DEBUG
-                SDL_Color wall_player0 = { 255,  69,   0, 255 }; // OrangeRed (#FF4500)
-                SDL_Color wall_player1 = { 255,   0,  0, 255 }; // Red-violet fonc� (#800040)
+                SDL_Color wall_player0 = {255, 69, 0, 255}; // OrangeRed (#FF4500)
+                SDL_Color wall_player1 = {255, 0, 0, 255};  // Red-violet foncé (#800040)
 
                 int owner = core->vWallOwners[i][j];
                 SDL_Color color = (owner == 0) ? wall_player0 : wall_player1;
                 Game_setRenderDrawColor(color, 255);
 #endif
+                SDL_RenderFillRect(g_renderer, &(self->m_rectVWalls[i][j]));
+            }
+            else if (core->vWalls[i][j] == WALL_STATE_TEMP)
+            {
+                Game_setRenderDrawColor(g_colors.green, 100);
                 SDL_RenderFillRect(g_renderer, &(self->m_rectVWalls[i][j]));
             }
             else if (playerTurn && mouseInRect)
@@ -702,7 +1003,11 @@ void UIQuoridor_render(UIQuoridor *self)
     // Game
     if (self->m_inSettings == false)
     {
-        UIQuoridor_renderPageMain(self);
+        UIQuoridor_renderPageSettings(self);
+    }
+    else if (self->m_inReview == true)
+    {
+        UIQuoridor_renderPageReview(self);
         UIQuoridor_renderBoard(self);
     }
     else
@@ -733,24 +1038,73 @@ void UIQuoridor_renderPageMain(UIQuoridor *self)
         y = UIQuoridor_renderPanel(
             self, x, y, panelWidth,
             self->m_textTitleInfo,
-            &(self->m_textInfo), 1
-        );
+            &(self->m_textInfo), 1);
 
         y += blockSep;
 
         y = UIQuoridor_renderPanel(
             self, x, y, panelWidth,
             self->m_textTitleWalls,
-            self->m_textWalls, 2
-        );
+            self->m_textWalls, 2);
 
         y += blockSep;
 
         y = UIQuoridor_renderPanel(
             self, x, y, panelWidth,
             self->m_textTitleDistances,
-            self->m_textDistances, 2
-        );
+            self->m_textDistances, 2);
+    }
+}
+
+void UIQuoridor_renderPageReview(UIQuoridor *self)
+{
+    assert(self && "The UIQuoridor must be created");
+    assert(self && "The UIQuoridor must be created");
+
+    Camera *camera = Scene_getCamera(self->m_scene);
+
+    QuoridorCore *core = Scene_getQuoridorCore(self->m_scene);
+
+    // UIButtons*
+    UIButton_render(self->m_buttonExit);
+    if (core->state != QUORIDOR_STATE_UNFINISHED)
+        UIButton_render(self->m_buttonNextStep);
+
+    // Panels
+    const float blockSep = 20.f;
+    float x = self->m_rectMainPanels.x;
+    float y = self->m_rectMainPanels.y + blockSep;
+
+    const float panelWidth = self->m_rectMainPanels.w;
+
+    y = UIQuoridor_renderPanel(
+        self, x, y, panelWidth,
+        self->m_textTitleInfo,
+        &(self->m_textInfo), 1);
+
+    y += blockSep;
+
+    y = UIQuoridor_renderPanel(
+        self, x, y, panelWidth,
+        self->m_textTitleWalls,
+        self->m_textWalls, 2);
+
+    y += blockSep;
+
+    y = UIQuoridor_renderPanel(
+        self, x, y, panelWidth,
+        self->m_textTitleDistances,
+        self->m_textDistances, 2);
+
+    if (UIQuoridor_isPlayerTurn(self))
+    {
+
+        y += blockSep;
+
+        y = UIQuoridor_renderPanel(
+            self, x, y, panelWidth,
+            self->m_textTitleTurnInfo,
+            &(self->m_textTurnInfo), 1);
     }
 }
 
