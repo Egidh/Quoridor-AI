@@ -102,6 +102,8 @@ static bool QuoridorCore_canPlayTurn(QuoridorCore *self, QuoridorTurn turn)
 		return QuoridorCore_canPlayWall(self, WALL_TYPE_VERTICAL, turn.i, turn.j);
 	case QUORIDOR_MOVE_TO:
 		return QuoridorCore_canMoveTo(self, turn.i, turn.j);
+	case QUORIDOR_ACTION_UNDEFINED:
+		return false;
 	default:
 		return false;
 	}
@@ -663,7 +665,7 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore* self, int depth, void* aiDat
 			break;
 		}
 		childValue = QuoridorCore_minMax(self, self->playerID, 0, i, alpha, beta, &childTurn, aiData);
-		if (childValue > bestValue)
+		if (childTurn.action != QUORIDOR_ACTION_UNDEFINED && childValue > bestValue)
 		{
 			bestValue = childValue;
 			bestTurn = childTurn;
