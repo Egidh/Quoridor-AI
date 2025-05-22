@@ -1,3 +1,6 @@
 assets
 _build_vs
+_build_linux
 _bin
+.vscode
+build
