@@ -103,62 +103,72 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
     // On éxécute le mouvement
 	self->m_listMode->m_valueID = isIA;
 
-    // On veut voir quel coup est le meilleur
-    QuoridorTurn bestTurn;
-    bestTurn = QuoridorCore_computeTurn(core, 6, self->m_aiData[core->playerID]);
 
-    // Score du joueur
-    QuoridorCore gameCopy = *core;
-    QuoridorCore_playTurn(&gameCopy, *turn);
-    float scorePlayer = QuoridorCore_computeScore(&gameCopy, core->playerID, *turn);
+    int selectedMode = UIList_getSelected(self->m_listMode);
+    int isIaTurn = ((selectedMode == 0) || ((selectedMode == 1) && core->playerID ^ 1 == 0));
 
-    // Score de l'IA
-    gameCopy = *core;
-	QuoridorCore_playTurn(&gameCopy, bestTurn);
-	float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID, bestTurn);
+    if (!isIaTurn) {
+        // On veut voir quel coup est le meilleur
+        QuoridorTurn bestTurn;
+        bestTurn = QuoridorCore_computeTurn(core, 6, self->m_aiData[core->playerID]);
 
-	printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnées sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
+        // Score du joueur
+        QuoridorCore gameCopy = *core;
+        QuoridorCore_playTurn(&gameCopy, *turn);
+        float scorePlayer = QuoridorCore_computeScore(&gameCopy, core->playerID, *turn);
 
-    // Score du coup
-    int score = UIQuoridor_calculateScore(scorePlayer, scoreIA);
-	switch (score) {
-	case 3:
-		Text_setString(self->m_textTurnInfo, "INSANNEEE");
-		break;
-	case 2:
-		Text_setString(self->m_textTurnInfo, "Tres bon coup");
-		break;
-	case 1:
-		Text_setString(self->m_textTurnInfo, "Excellent coup");
-		break;
-	case -1:
-		Text_setString(self->m_textTurnInfo, "Mauvais coup");
-		break;
-	case -2:
-		Text_setString(self->m_textTurnInfo, "Tres mauvais coup");
-		break;
-	}
-    Text_setColor(self->m_textTurnInfo, core->playerID == 0 ? g_colors.player0 : g_colors.player1);
+        // Score de l'IA
+        gameCopy = *core;
+        QuoridorCore_playTurn(&gameCopy, bestTurn);
+        float scoreIA = QuoridorCore_computeScore(&gameCopy, core->playerID, bestTurn);
 
-    // ATTENTION QUAND ON PLACE UN MUR, IL FAUT MODIFIER LE FONCTIONNEMENT
-    // PAS CALCULER L'AVANCE
+        printf("======= INFORMATIONS SUR LE COUP =======\nLe type de coup est : %d\nLes coordonnées sont: %d\nLe score du coup est: %f VS %f\nAvis sur le coup: %d\n\n", bestTurn.action == turn->action, (bestTurn.i == turn->i) && (bestTurn.j == turn->j), scorePlayer, scoreIA, UIQuoridor_calculateScore(scorePlayer, scoreIA));
 
-    if (bestTurn.action == QUORIDOR_MOVE_TO) {
-        core->reviewCore[bestTurn.i][bestTurn.j] = 2;
-        core->reviewCore[core->positions[core->playerID].i][core->positions[core->playerID].j] = 1;
-    }
-    QuoridorCore_playTurn(core, *turn);
-
-    if (score <= 2 && !(bestTurn.i == turn->i && bestTurn.j == turn->j && bestTurn.action == turn->action))
-    {
-        if (bestTurn.action == QUORIDOR_PLAY_HORIZONTAL_WALL) {
-            QuoridorCore_playWall(core, WALL_TYPE_HORIZONTAL_TEMP, bestTurn.i, bestTurn.j);
+        // Score du coup
+        int score = UIQuoridor_calculateScore(scorePlayer, scoreIA);
+        switch (score) {
+        case 3:
+            Text_setString(self->m_textTurnInfo, "INSANNEEE");
+            break;
+        case 2:
+            Text_setString(self->m_textTurnInfo, "Tres bon coup");
+            break;
+        case 1:
+            Text_setString(self->m_textTurnInfo, "Excellent coup");
+            break;
+        case -1:
+            Text_setString(self->m_textTurnInfo, "Mauvais coup");
+            break;
+        case -2:
+            Text_setString(self->m_textTurnInfo, "Tres mauvais coup");
+            break;
         }
-        else if (bestTurn.action == QUORIDOR_PLAY_VERTICAL_WALL) {
-            QuoridorCore_playWall(core, WALL_TYPE_VERTICAL_TEMP, bestTurn.i, bestTurn.j);
+        Text_setColor(self->m_textTurnInfo, core->playerID == 0 ? g_colors.player0 : g_colors.player1);
+        // ATTENTION QUAND ON PLACE UN MUR, IL FAUT MODIFIER LE FONCTIONNEMENT
+        // PAS CALCULER L'AVANCE
+
+        if (bestTurn.action == QUORIDOR_MOVE_TO) {
+            core->reviewCore[bestTurn.i][bestTurn.j] = 2;
+            core->reviewCore[core->positions[core->playerID].i][core->positions[core->playerID].j] = 1;
         }
 
+        QuoridorCore_playTurn(core, *turn);
+
+        if (score <= 2 && !(bestTurn.i == turn->i && bestTurn.j == turn->j && bestTurn.action == turn->action))
+        {
+            if (bestTurn.action == QUORIDOR_PLAY_HORIZONTAL_WALL) {
+                QuoridorCore_playWall(core, WALL_TYPE_HORIZONTAL_TEMP, bestTurn.i, bestTurn.j);
+            }
+            else if (bestTurn.action == QUORIDOR_PLAY_VERTICAL_WALL) {
+                QuoridorCore_playWall(core, WALL_TYPE_VERTICAL_TEMP, bestTurn.i, bestTurn.j);
+            }
+
+        }
     }
+    else {
+        QuoridorCore_playTurn(core, *turn);
+    }
+
 
     // On ferme les fichiers
     rewind(file);
@@ -1099,7 +1109,10 @@ void UIQuoridor_renderPageReview(UIQuoridor* self)
         self->m_textDistances, 2
     );
 
-    if (UIQuoridor_isPlayerTurn(self)) {
+
+
+    int selectedMode = UIList_getSelected(self->m_listMode);
+    if ( (selectedMode == 0) || ((selectedMode == 1) && core->playerID^1 == 0) ) {
 
         y += blockSep;
 
