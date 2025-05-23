@@ -6,10 +6,10 @@
 
 #include "core/quoridor_core.h"
 #include "core/utils.h"
+#include <limits.h>
 
 #ifndef DEBUG
 #define DEBUG 0
-#include <limits.h>
 #endif
 
 #define DIJKSTRA 0
