@@ -199,7 +199,6 @@
   /usr/lib/x86_64-linux-gnu/libc_nonshared.a \
   /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-17.0.so \
   application/CMakeFiles/application.dir/src/core/quoridor_ai.c.o \
-  application/CMakeFiles/application.dir/src/core/quoridor_ai_notiterative.c.o \
   application/CMakeFiles/application.dir/src/core/quoridor_core.c.o \
   application/CMakeFiles/application.dir/src/engine/asset_manager.c.o \
   application/CMakeFiles/application.dir/src/engine/camera.c.o \
@@ -287,6 +286,8 @@ application/CMakeFiles/application.dir/src/core/quoridor_ai.c.o: /home/user/Docu
   /usr/include/features-time64.h \
   /usr/include/features.h \
   /usr/include/inttypes.h \
+  /usr/include/limits.h \
+  /usr/include/linux/limits.h \
   /usr/include/math.h \
   /usr/include/stdc-predef.h \
   /usr/include/stdint.h \
@@ -307,11 +308,16 @@ application/CMakeFiles/application.dir/src/core/quoridor_ai.c.o: /home/user/Docu
   /usr/include/x86_64-linux-gnu/bits/fp-logb.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
+  /usr/include/x86_64-linux-gnu/bits/local_lim.h \
   /usr/include/x86_64-linux-gnu/bits/long-double.h \
   /usr/include/x86_64-linux-gnu/bits/math-vector.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h \
   /usr/include/x86_64-linux-gnu/bits/mathcalls.h \
+  /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/posix2_lim.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h \
+  /usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes-arch.h \
   /usr/include/x86_64-linux-gnu/bits/pthreadtypes.h \
   /usr/include/x86_64-linux-gnu/bits/select.h \
@@ -359,10 +365,12 @@ application/CMakeFiles/application.dir/src/core/quoridor_ai.c.o: /home/user/Docu
   /usr/include/x86_64-linux-gnu/sys/cdefs.h \
   /usr/include/x86_64-linux-gnu/sys/select.h \
   /usr/include/x86_64-linux-gnu/sys/types.h \
+  /usr/lib/gcc/x86_64-linux-gnu/14/include/limits.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/include/stdarg.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/include/stdbool.h \
   /usr/lib/gcc/x86_64-linux-gnu/14/include/stddef.h \
-  /usr/lib/gcc/x86_64-linux-gnu/14/include/stdint.h
+  /usr/lib/gcc/x86_64-linux-gnu/14/include/stdint.h \
+  /usr/lib/gcc/x86_64-linux-gnu/14/include/syslimits.h
 
 application/CMakeFiles/application.dir/src/core/quoridor_core.c.o: /home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_core.c \
   /home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_ai.h \
@@ -2686,6 +2694,8 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 
 /home/user/Documents/GitHub/TP-S4/application/src/engine/asset_manager.c:
 
+/usr/lib/gcc/x86_64-linux-gnu/14/include/syslimits.h:
+
 /usr/include/x86_64-linux-gnu/sys/types.h:
 
 /usr/include/x86_64-linux-gnu/sys/select.h:
@@ -2744,11 +2754,17 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 
 /usr/include/x86_64-linux-gnu/bits/stdint-least.h:
 
+/usr/include/x86_64-linux-gnu/bits/pthread_stack_min.h:
+
+/usr/include/x86_64-linux-gnu/bits/posix1_lim.h:
+
 /usr/include/x86_64-linux-gnu/bits/mathcalls.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-macros.h:
 
 /usr/include/x86_64-linux-gnu/bits/mathcalls-helper-functions.h:
+
+/usr/include/x86_64-linux-gnu/bits/math-vector.h:
 
 /usr/include/x86_64-linux-gnu/bits/long-double.h:
 
@@ -2777,6 +2793,8 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 /usr/include/x86_64-linux-gnu/bits/types/__FILE.h:
 
 /usr/include/math.h:
+
+/usr/include/linux/limits.h:
 
 /usr/include/features-time64.h:
 
@@ -2811,8 +2829,6 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 /usr/include/SDL3/SDL_process.h:
 
 /usr/include/SDL3/SDL_power.h:
-
-/usr/include/SDL3/SDL_platform.h:
 
 /usr/include/x86_64-linux-gnu/bits/waitflags.h:
 
@@ -2958,6 +2974,8 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 
 /usr/include/SDL3/SDL_events.h:
 
+/usr/include/x86_64-linux-gnu/bits/local_lim.h:
+
 /usr/lib/x86_64-linux-gnu/libSDL3_image.so.0.2.4:
 
 /lib/i386-linux-gnu/libexpat.so.1:
@@ -3042,6 +3060,8 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 
 /home/user/Documents/GitHub/TP-S4/application/src/game/input.h:
 
+/usr/include/x86_64-linux-gnu/bits/pthread_stack_min-dynamic.h:
+
 /lib/i386-linux-gnu/libxkbcommon.so.0:
 
 /usr/include/SDL3_image/SDL_image.h:
@@ -3091,6 +3111,8 @@ application/CMakeFiles/application.dir/src/main.c.o: /home/user/Documents/GitHub
 /lib/x86_64-linux-gnu/libwebpdemux.so.2:
 
 /lib64/ld-linux-x86-64.so.2:
+
+/usr/lib/gcc/x86_64-linux-gnu/14/include/limits.h:
 
 /lib/i386-linux-gnu/libXau.so.6:
 
@@ -3185,6 +3207,8 @@ application/CMakeFiles/application.dir/src/engine/common.c.o:
 /lib/x86_64-linux-gnu/libsharpyuv.so.0:
 
 /lib/x86_64-linux-gnu/libpulse.so.0:
+
+/usr/include/x86_64-linux-gnu/bits/posix2_lim.h:
 
 /usr/include/SDL3/SDL_gamepad.h:
 
@@ -3310,6 +3334,8 @@ application/CMakeFiles/application.dir/src/game/scene.c.o:
 
 /usr/lib/i386-linux-gnu/libvorbis.so.0:
 
+/usr/include/SDL3/SDL_platform.h:
+
 /usr/lib/i386-linux-gnu/libwayland-cursor.so.0:
 
 /home/user/Documents/GitHub/TP-S4/application/src/engine/text.h:
@@ -3338,10 +3364,6 @@ application/CMakeFiles/application.dir/src/game/scene.c.o:
 
 /usr/lib/x86_64-linux-gnu/pulseaudio/libpulsecommon-17.0.so:
 
-/usr/include/x86_64-linux-gnu/bits/math-vector.h:
-
-application/CMakeFiles/application.dir/src/core/quoridor_ai_notiterative.c.o:
-
 application/CMakeFiles/application.dir/src/engine/asset_manager.c.o:
 
 application/CMakeFiles/application.dir/src/engine/camera.c.o:
@@ -3349,6 +3371,8 @@ application/CMakeFiles/application.dir/src/engine/camera.c.o:
 application/CMakeFiles/application.dir/src/engine/sprite_anim.c.o:
 
 application/CMakeFiles/application.dir/src/engine/timer.c.o:
+
+/usr/include/limits.h:
 
 application/CMakeFiles/application.dir/src/game/input.c.o:
 
