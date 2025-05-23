@@ -96,8 +96,8 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
     int isIA = -1;
 
     int round;
-    fscanf(file, "%d\n", &round);
-
+    fscanf(file, "%d", &round);
+    printf("%d\n", round);
     int end;
     for (int i = -1; i < round; i++)
     {
@@ -112,9 +112,12 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
     // On éxécute le mouvement
     self->m_listMode->m_valueID = isIA;
 
+    int selectedMode = UIList_getSelected(self->m_listMode);
+    int isIaTurn = ((selectedMode == 0) || ((selectedMode == 1) && core->playerID == 0));
+
     // On veut voir quel coup est le meilleur
     QuoridorTurn bestTurn;
-    bestTurn = QuoridorCore_computeTurn(core, 3, self->m_aiData[core->playerID]);
+    bestTurn = QuoridorCore_computeTurn(core, 6, self->m_aiData[core->playerID]);
 
     // Score du joueur
     QuoridorCore gameCopy = *core;
@@ -149,7 +152,6 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
         break;
     }
     Text_setColor(self->m_textTurnInfo, core->playerID == 0 ? g_colors.player0 : g_colors.player1);
-
     // ATTENTION QUAND ON PLACE UN MUR, IL FAUT MODIFIER LE FONCTIONNEMENT
     // PAS CALCULER L'AVANCE
 
@@ -158,6 +160,7 @@ void UIQuoridor_nextTurn(UIQuoridor *self)
         core->reviewCore[bestTurn.i][bestTurn.j] = 2;
         core->reviewCore[core->positions[core->playerID].i][core->positions[core->playerID].j] = 1;
     }
+
     QuoridorCore_playTurn(core, *turn);
 
     if (score <= 2 && !(bestTurn.i == turn->i && bestTurn.j == turn->j && bestTurn.action == turn->action))
