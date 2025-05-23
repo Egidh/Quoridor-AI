@@ -303,13 +303,12 @@ float QuoridorCore_computeScore(QuoridorCore *self, int playerID, QuoridorTurn t
     // Différence de distance à parcourir
     score += (other_path.size - my_path.size) * 3;
     // Nombre de murs restants
-    score += self->wallCounts[playerA] * 1;
+    score += self->wallCounts[playerA] * 0.7;
 
     // Distance du centre
     int center = self->gridSize / 2;
-    int center_score = (abs(self->positions[playerA].i - center) + abs(self->positions[playerA].j - center));
-    if (center_score < 4)
-        score += (4 - center_score) * 1;
+    if ((abs(self->positions[playerA].i - center) <= 2) && (abs(self->positions[playerA].j - center) <= 2))
+        score += 3;
 
     return score + (Float_rand01());
 }
@@ -321,11 +320,14 @@ static float QuoridorCore_computeWall(QuoridorCore self, int playerID, QuoridorP
     score += (other_path.size - my_path.size) * 3;
 
     // Proximité du chemin adverse
-    for (int i = 0; i < other_path.size; i++)
+    for (int k = 0; k < other_path.size; k++)
     {
-        int distance = abs(turn.i - other_path.tiles[i].i) + abs(turn.j - other_path.tiles[i].j);
-        if (distance < 4)
-            score += (4 - distance) * 1;
+        int distance = abs(turn.i - other_path.tiles[k].i) + abs(turn.j - other_path.tiles[k].j);
+        if (distance < 3)
+        {
+            score += (3 - distance) * 1.7;
+            score += (17 - k) / 2.3;
+        }
     }
 
     return score;
@@ -528,7 +530,7 @@ static float QuoridorCore_minMax(QuoridorCore *self, int playerID, int currDepth
     {
         qsort(list, pos, sizeof(TurnToSort), QuoridorCore_compareWall);
 
-        int limit = (pos < 14) ? pos : 14;
+        int limit = (pos < 7) ? pos : 7;
         for (int i = 0; i < limit; i++)
         {
             QuoridorCore_playTurn(&gameCopy, list[i].turn);
@@ -574,7 +576,7 @@ QuoridorTurn QuoridorCore_computeTurn(QuoridorCore *self, int depth, void *aiDat
     QuoridorTurn bestTurn = {0};
     float childValue = 0;
 
-    for (int maxDepth = 0; maxDepth <= 3; maxDepth++)
+    for (int maxDepth = 0; maxDepth <= 5; maxDepth++)
     {
         childValue = QuoridorCore_minMax(self, self->playerID, 0, maxDepth, alpha, beta, &childTurn, aiData);
         if (childTurn.action != QUORIDOR_ACTION_UNDEFINED && childValue > bestValue)
