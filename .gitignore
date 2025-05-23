@@ -4,5 +4,4 @@ _build_linux
 _bin
 .vscode
 build
-data/test.txt
-test.txt
+data
