@@ -1,0 +1,98 @@
+[
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/core/quoridor_ai.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_ai.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_ai.c",
+  "output": "application/CMakeFiles/application.dir/src/core/quoridor_ai.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/core/quoridor_core.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_core.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/core/quoridor_core.c",
+  "output": "application/CMakeFiles/application.dir/src/core/quoridor_core.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/asset_manager.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/asset_manager.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/asset_manager.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/asset_manager.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/camera.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/camera.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/camera.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/camera.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/common.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/common.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/common.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/common.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/math.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/math.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/math.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/math.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/sprite_anim.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/sprite_anim.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/sprite_anim.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/sprite_anim.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/text.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/text.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/text.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/text.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/engine/timer.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/engine/timer.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/engine/timer.c",
+  "output": "application/CMakeFiles/application.dir/src/engine/timer.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/game_common.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/game_common.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/game_common.c",
+  "output": "application/CMakeFiles/application.dir/src/game/game_common.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/input.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/input.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/input.c",
+  "output": "application/CMakeFiles/application.dir/src/game/input.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/scene.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/scene.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/scene.c",
+  "output": "application/CMakeFiles/application.dir/src/game/scene.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/ui_button.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/ui_button.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/ui_button.c",
+  "output": "application/CMakeFiles/application.dir/src/game/ui_button.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/ui_list.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/ui_list.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/ui_list.c",
+  "output": "application/CMakeFiles/application.dir/src/game/ui_list.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/game/ui_quoridor.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/game/ui_quoridor.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/game/ui_quoridor.c",
+  "output": "application/CMakeFiles/application.dir/src/game/ui_quoridor.c.o"
+},
+{
+  "directory": "/home/user/Documents/GitHub/TP-S4/build/application",
+  "command": "/usr/bin/cc -D_CRT_SECURE_NO_WARNINGS -I/home/user/Documents/GitHub/TP-S4/application/src -g -Wall -o CMakeFiles/application.dir/src/main.c.o -c /home/user/Documents/GitHub/TP-S4/application/src/main.c",
+  "file": "/home/user/Documents/GitHub/TP-S4/application/src/main.c",
+  "output": "application/CMakeFiles/application.dir/src/main.c.o"
+}
+]

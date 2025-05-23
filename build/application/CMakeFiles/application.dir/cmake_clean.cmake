@@ -1,0 +1,42 @@
+file(REMOVE_RECURSE
+  "/home/user/Documents/GitHub/TP-S4/_bin/Debug/application"
+  "/home/user/Documents/GitHub/TP-S4/_bin/Debug/application.pdb"
+  "CMakeFiles/application.dir/link.d"
+  "CMakeFiles/application.dir/src/core/quoridor_ai.c.o"
+  "CMakeFiles/application.dir/src/core/quoridor_ai.c.o.d"
+  "CMakeFiles/application.dir/src/core/quoridor_core.c.o"
+  "CMakeFiles/application.dir/src/core/quoridor_core.c.o.d"
+  "CMakeFiles/application.dir/src/engine/asset_manager.c.o"
+  "CMakeFiles/application.dir/src/engine/asset_manager.c.o.d"
+  "CMakeFiles/application.dir/src/engine/camera.c.o"
+  "CMakeFiles/application.dir/src/engine/camera.c.o.d"
+  "CMakeFiles/application.dir/src/engine/common.c.o"
+  "CMakeFiles/application.dir/src/engine/common.c.o.d"
+  "CMakeFiles/application.dir/src/engine/math.c.o"
+  "CMakeFiles/application.dir/src/engine/math.c.o.d"
+  "CMakeFiles/application.dir/src/engine/sprite_anim.c.o"
+  "CMakeFiles/application.dir/src/engine/sprite_anim.c.o.d"
+  "CMakeFiles/application.dir/src/engine/text.c.o"
+  "CMakeFiles/application.dir/src/engine/text.c.o.d"
+  "CMakeFiles/application.dir/src/engine/timer.c.o"
+  "CMakeFiles/application.dir/src/engine/timer.c.o.d"
+  "CMakeFiles/application.dir/src/game/game_common.c.o"
+  "CMakeFiles/application.dir/src/game/game_common.c.o.d"
+  "CMakeFiles/application.dir/src/game/input.c.o"
+  "CMakeFiles/application.dir/src/game/input.c.o.d"
+  "CMakeFiles/application.dir/src/game/scene.c.o"
+  "CMakeFiles/application.dir/src/game/scene.c.o.d"
+  "CMakeFiles/application.dir/src/game/ui_button.c.o"
+  "CMakeFiles/application.dir/src/game/ui_button.c.o.d"
+  "CMakeFiles/application.dir/src/game/ui_list.c.o"
+  "CMakeFiles/application.dir/src/game/ui_list.c.o.d"
+  "CMakeFiles/application.dir/src/game/ui_quoridor.c.o"
+  "CMakeFiles/application.dir/src/game/ui_quoridor.c.o.d"
+  "CMakeFiles/application.dir/src/main.c.o"
+  "CMakeFiles/application.dir/src/main.c.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang C)
+  include(CMakeFiles/application.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

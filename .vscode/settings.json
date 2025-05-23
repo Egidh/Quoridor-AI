@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "ui_quoridor.h": "c",
+        "quoridor_ai_notiterative.h": "c"
+    }
+}

@@ -1,0 +1,403 @@
+{
+	"artifacts" : 
+	[
+		{
+			"path" : "/home/user/Documents/GitHub/TP-S4/_bin/Debug/application"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_executable",
+			"target_link_libraries",
+			"target_compile_options",
+			"target_compile_definitions",
+			"target_include_directories",
+			"target_sources"
+		],
+		"files" : 
+		[
+			"application/CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 7,
+				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 46,
+				"parent" : 0
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 23,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 20,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 55,
+				"parent" : 0
+			},
+			{
+				"command" : 5,
+				"file" : 0,
+				"line" : 26,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g"
+				},
+				{
+					"backtrace" : 3,
+					"fragment" : "-Wall"
+				}
+			],
+			"defines" : 
+			[
+				{
+					"backtrace" : 4,
+					"define" : "_CRT_SECURE_NO_WARNINGS"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 5,
+					"path" : "/home/user/Documents/GitHub/TP-S4/application/src"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				15
+			]
+		}
+	],
+	"id" : "application::@8badf0d542dc2e21c899",
+	"link" : 
+	{
+		"commandFragments" : 
+		[
+			{
+				"fragment" : "-g",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "",
+				"role" : "flags"
+			},
+			{
+				"fragment" : "-lm",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libSDL3_image.so.0.2.4",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libSDL3_ttf.so.0.2.0",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 2,
+				"fragment" : "/usr/lib/x86_64-linux-gnu/libSDL3.so.0.2.8",
+				"role" : "libraries"
+			}
+		],
+		"language" : "C"
+	},
+	"name" : "application",
+	"nameOnDisk" : "application",
+	"paths" : 
+	{
+		"build" : "application",
+		"source" : "application"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "sources\\core",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				16,
+				17,
+				18
+			]
+		},
+		{
+			"name" : "sources\\engine",
+			"sourceIndexes" : 
+			[
+				2,
+				3,
+				4,
+				5,
+				6,
+				7,
+				8,
+				19,
+				20,
+				21,
+				22,
+				23,
+				24,
+				25
+			]
+		},
+		{
+			"name" : "sources\\game",
+			"sourceIndexes" : 
+			[
+				9,
+				10,
+				11,
+				12,
+				13,
+				14,
+				26,
+				27,
+				28,
+				29,
+				30,
+				31
+			]
+		},
+		{
+			"name" : "sources",
+			"sourceIndexes" : 
+			[
+				15,
+				32
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/core/quoridor_ai.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/core/quoridor_core.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/asset_manager.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/camera.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/common.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/math.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/sprite_anim.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/text.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/engine/timer.c",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/game_common.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/input.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/scene.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/ui_button.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/ui_list.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/game/ui_quoridor.c",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"compileGroupIndex" : 0,
+			"path" : "application/src/main.c",
+			"sourceGroupIndex" : 3
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/core/quoridor_ai.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/core/quoridor_core.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/core/utils.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/asset_manager.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/camera.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/common.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/math.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/sprite_anim.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/text.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/engine/timer.h",
+			"sourceGroupIndex" : 1
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/game_common.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/input.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/scene.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/ui_button.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/ui_list.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/game/ui_quoridor.h",
+			"sourceGroupIndex" : 2
+		},
+		{
+			"backtrace" : 6,
+			"path" : "application/src/settings.h",
+			"sourceGroupIndex" : 3
+		}
+	],
+	"type" : "EXECUTABLE"
+}
